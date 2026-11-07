@@ -5,6 +5,7 @@
 ## SavedVariables: ForeverCombatStyleDB
 ## IconTexture: Interface\Icons\Spell_Fire_FlameBolt
 ## AddonCompartmentFunc: ForeverCombatStyle_OnAddonCompartmentClick
+## Author: _rootkit
 
 Core.lua
 Widgets.lua
