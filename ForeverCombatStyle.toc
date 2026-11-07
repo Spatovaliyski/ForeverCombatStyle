@@ -1,0 +1,12 @@
+## Interface: 16001, 120100
+## Title: Forever Combat Style
+## Notes: Tune floating damage number CVars (style, size, gravity, spread, height, direction) with a live preview. /fcs
+## Version: 1.0.0
+## SavedVariables: ForeverCombatStyleDB
+## IconTexture: Interface\Icons\Spell_Fire_FlameBolt
+## AddonCompartmentFunc: ForeverCombatStyle_OnAddonCompartmentClick
+
+Core.lua
+Widgets.lua
+Preview.lua
+Window.lua
