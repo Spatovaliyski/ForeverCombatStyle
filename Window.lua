@@ -66,7 +66,12 @@ local function BuildPages()
                 layout:Heading(L["Language"])
                 local choices = {}
                 for _, option in ipairs(NS.LOCALE_OPTIONS) do
-                    choices[#choices + 1] = { id = option.id, label = NS:GetLocaleOptionLabel(option) }
+                    -- Each name is drawn in a font that has its own script (Source Sans 3 has no
+                    -- Korean or Chinese); "Auto" is drawn in the language it resolves to.
+                    local code = option.id == "auto" and NS:ResolveLocaleCode("auto") or option.id
+                    choices[#choices + 1] = {
+                        id = option.id, label = NS:GetLocaleOptionLabel(option), font = W.FontPathFor(code, "regular"),
+                    }
                 end
                 layout:Choice(L["Language"],
                     L["Choose the language used by Forever Combat Style panels and messages."], choices,
@@ -130,6 +135,9 @@ local function Build()
     -- Labels of a window that was replaced (language change) are no longer worth re-laying.
     W.texts = {}
     local frame = CreateFrame("Frame", "ForeverCombatStyleFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    -- ESC looks the window up by this global name. A rebuilt window (language change) reuses the
+    -- name, and the game may keep the old frame under it, so point the name at this one.
+    _G["ForeverCombatStyleFrame"] = frame
     frame:Hide()
     frame:SetSize(WINDOW_WIDTH, WINDOW_HEIGHT)
     frame:SetPoint("CENTER")
@@ -367,6 +375,7 @@ local function Build()
         self:FitToScreen()
     end)
     frame:SetScript("OnHide", function(self)
+        W.CloseMenu()   -- the dropdown is not a child of this window, so close it explicitly
         if grip.sizing then
             grip.sizing = nil
             SaveSize()
@@ -449,6 +458,14 @@ function NS.Debug()
         NS.Print("open the window once with /fcs, then run /fcs debug.")
         return
     end
+    -- ESC closes the window through UISpecialFrames, which finds it by its global name.
+    local listed = false
+    for _, name in ipairs(UISpecialFrames) do
+        if name == "ForeverCombatStyleFrame" then listed = true end
+    end
+    NS.Print(string.format("window: shown=%s listed for ESC=%s global is this window=%s language=%s",
+        tostring(NS.frame:IsShown()), tostring(listed),
+        tostring(_G["ForeverCombatStyleFrame"] == NS.frame), NS:ResolveLocaleCode()))
     local wanted = { [L["Number Style"]] = true, [L["Style"]] = true, [L["Size"]] = true, [L["Behaviour"]] = true }
     for _, region in ipairs(W.texts) do
         local text = region:GetText()

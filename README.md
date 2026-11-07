@@ -73,6 +73,10 @@ unsupported client uses English) or you can pick a language. Changing it rebuild
 translation falls back to English. The addon description in the AddOns list is translated too (`## Notes-xxXX` in the
 TOC).
 
+Korean and Chinese use the game's own font for that language (`2002.TTF`, `ARKai_T.ttf`, `bLEI00D.ttf`), because Source
+Sans 3 has no such glyphs and an English client's default font is Latin-only (it drew boxes). The dropdown draws each
+language name in its own font, so every name is readable whichever language is active.
+
 The translations are AI-generated; the Language section says so for every language except English and has an Open Link
 button that shows the GitHub Issues URL to copy. Terms shared with PlateSCT reuse its wording.
 

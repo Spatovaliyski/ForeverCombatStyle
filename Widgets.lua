@@ -83,16 +83,23 @@ local FONT_FILES = {
     medium = "SourceSans3-Medium.ttf",
     semibold = "SourceSans3-Semibold.ttf",
 }
-local CJK = { koKR = true, zhCN = true, zhTW = true }
+-- Korean and Chinese need a font with those glyphs, and Source Sans 3 has none. These are the
+-- fonts the game itself uses for each language. STANDARD_TEXT_FONT is not enough: on an English
+-- client it is the Latin-only Friz Quadrata, so picking Korean or Chinese there showed boxes.
+local CJK_FONTS = {
+    koKR = "Fonts\\2002.TTF",
+    zhCN = "Fonts\\ARKai_T.ttf",
+    zhTW = "Fonts\\bLEI00D.ttf",
+}
 
--- Source Sans 3 covers Latin and Cyrillic. Korean and Chinese use the client font, whether the
--- client or the addon's language setting asks for them (as in PlateSCT).
+-- The font file for text in language `code`: Source Sans 3 covers Latin and Cyrillic.
+function W.FontPathFor(code, role)
+    return CJK_FONTS[code] or (MEDIA .. "Fonts\\" .. (FONT_FILES[role] or FONT_FILES.regular))
+end
+
+-- The font for the window's own language.
 function W.FontPath(role)
-    local code = NS.ResolveLocaleCode and NS:ResolveLocaleCode() or ""
-    if CJK[code] or CJK[GetLocale and GetLocale() or ""] then
-        return STANDARD_TEXT_FONT
-    end
-    return MEDIA .. "Fonts\\" .. (FONT_FILES[role] or FONT_FILES.regular)
+    return W.FontPathFor(NS.ResolveLocaleCode and NS:ResolveLocaleCode() or "", role)
 end
 
 -- The client loads a font file on first use; text laid out before that can stay blank.
@@ -108,6 +115,13 @@ do
             probe:SetText("Aa")
         end
     end
+    for _, path in pairs(CJK_FONTS) do
+        for _, size in ipairs({ 13, 14, 15, 22 }) do
+            local probe = loader:CreateFontString(nil, "ARTWORK")
+            pcall(probe.SetFont, probe, path, size, "")
+            probe:SetText("Aa")
+        end
+    end
 end
 
 -- Set a font and make sure it took. A font the client rejects can leave the old (or no) font
@@ -116,7 +130,8 @@ function W.SetFont(region, role, size, flags)
     region.optionsRole, region.optionsSize = role or "regular", size
     flags = flags or ""
     if region.SetShadowOffset then region:SetShadowOffset(0, 0) end
-    local ok, loaded = pcall(region.SetFont, region, W.FontPath(region.optionsRole), size, flags)
+    -- `optionsFontPath` pins one region to a font (a language name drawn in its own script).
+    local ok, loaded = pcall(region.SetFont, region, region.optionsFontPath or W.FontPath(region.optionsRole), size, flags)
     local _, current = region:GetFont()
     if not ok or loaded == false or not current or math.abs(current - size) > 0.5 then
         pcall(region.SetFont, region, STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", size, flags)
@@ -547,8 +562,14 @@ local function CreateMenu()
     return menu
 end
 
--- `control.choices` is { { id =, label = }, ... }; control.get() returns the current id and
--- control.set(id) is called when an entry is picked.
+-- Close the popup if it is open (the window calls this when it hides).
+function W.CloseMenu()
+    if menuFrame then menuFrame:Hide() end
+end
+
+-- `control.choices` is { { id =, label =, font = }, ... }; `font` (optional) is the font file
+-- the entry is drawn in. control.get() returns the current id and control.set(id) is called
+-- when an entry is picked.
 local function OpenMenu(control)
     if not control:IsEnabled() then return end
     if menuFrame and menuFrame.owner == control then menuFrame:Hide(); return end
@@ -575,7 +596,11 @@ local function OpenMenu(control)
             menu.entries[index] = entry
         end
         local id = choice.id
+        local entryFont = entry:GetFontString()
+        entryFont.optionsFontPath = choice.font
+        W.SetFont(entryFont, "regular", 14)
         entry:SetText(choice.label)
+        W.RefreshText(entryFont)
         entry.check:SetShown(id == selected)
         W.SetSelected(entry, id == selected)
         entry:SetScript("OnClick", function()
