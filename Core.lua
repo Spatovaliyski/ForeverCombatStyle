@@ -7,12 +7,15 @@ NS.VERSION = "1.0.0"
 NS.PREFIX = "|cff8ee6deForeverCombatStyle:|r "
 
 local abs = math.abs
+local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 
 -- Every control in the window is generated from this list, in this order.
 --   kind    "slider" (min/max/step/decimals), "choice" (options = { {value, label}, ... })
 --           or "toggle" (0 / 1)
 --   hardMin / hardMax   limits for typed values (the slider range is only the drag range)
 --   default             the WoW Forever default listed on the Warcraft wiki
+--   label, tip and option labels are English keys into NS.L; the window translates them when it
+--   draws them (the language can change while the game runs), so keep them in Locales/enUS.lua.
 NS.SETTINGS = {
     {
         cvar = "classicStyleWorldText", kind = "choice",
@@ -293,7 +296,9 @@ local function InitDB()
     if type(db.values) ~= "table" then db.values = {} end
     if db.reapply == nil then db.reapply = true end
     if db.showPreview == nil then db.showPreview = true end
+    if not NS:IsLocalePreference(db.locale) then db.locale = "auto" end
     NS.db = db
+    NS:ApplyLocale()
 end
 
 local events = CreateFrame("Frame")
@@ -322,9 +327,9 @@ SlashCmdList["FOREVERCOMBATSTYLE"] = function(message)
     if message == "reset" then
         NS.Reset()
         if NS.RefreshWindow then NS.RefreshWindow() end
-        NS.Print("all combat text CVars set back to the WoW Forever defaults.")
+        NS.Print(L["all combat text CVars set back to the WoW Forever defaults."])
     elseif message == "help" or message == "?" then
-        NS.Print("/fcs opens the window. /fcs reset restores the WoW Forever defaults.")
+        NS.Print(L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."])
     elseif message == "debug" and NS.Debug then
         NS.Debug()
     elseif NS.Toggle then

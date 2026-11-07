@@ -3,6 +3,7 @@
 local ADDON_NAME, NS = ...
 local W = {}
 NS.W = W
+local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 
 local MEDIA = "Interface\\AddOns\\" .. (ADDON_NAME or "ForeverCombatStyle") .. "\\Media\\"
 local WHITE = "Interface\\Buttons\\WHITE8X8"
@@ -25,6 +26,7 @@ local C = {
     selected = { 0.169, 0.145, 0.106, 1 },
     navActive = { 0.133, 0.114, 0.086, 1 },
     hover = { 0.098, 0.086, 0.067, 1 },
+    menu = { 0.118, 0.102, 0.078, 1 },
     menuHover = { 0.165, 0.141, 0.106, 1 },
     card = { 0.090, 0.078, 0.059, 1 },
     cardHover = { 0.106, 0.094, 0.071, 1 },
@@ -83,8 +85,11 @@ local FONT_FILES = {
 }
 local CJK = { koKR = true, zhCN = true, zhTW = true }
 
+-- Source Sans 3 covers Latin and Cyrillic. Korean and Chinese use the client font, whether the
+-- client or the addon's language setting asks for them (as in PlateSCT).
 function W.FontPath(role)
-    if CJK[GetLocale and GetLocale() or ""] then
+    local code = NS.ResolveLocaleCode and NS:ResolveLocaleCode() or ""
+    if CJK[code] or CJK[GetLocale and GetLocale() or ""] then
         return STANDARD_TEXT_FONT
     end
     return MEDIA .. "Fonts\\" .. (FONT_FILES[role] or FONT_FILES.regular)
@@ -257,6 +262,7 @@ end
 local KINDS = {
     window = { fill = C.window, radius = 10, ring = C.edge },
     control = { fill = C.field, radius = 8 },
+    menu = { fill = C.menu, radius = 10, ring = C.edge },
     focus = { fill = C.fieldOpen, radius = 8, ring = C.accentSoft },
     cardSelected = { fill = C.cardSelected, radius = 10, ring = C.accent },
 }
@@ -347,11 +353,14 @@ local function PaintButton(button)
     end
     local enabled = not button.IsEnabled or button:IsEnabled()
     local over = enabled and button.IsMouseOver and button:IsMouseOver()
-    local selected = button.optionsSelected
+    local selected, open = button.optionsSelected, button.optionsOpen
     local fill, text, icon
     if style == "flat" then
-        fill = selected and C.selected or over and C.fieldHover or C.field
+        fill = open and C.fieldOpen or selected and C.selected or over and C.fieldHover or C.field
         text = not enabled and C.disabledText or selected and C.accent or C.bright
+    elseif style == "menu" then
+        fill = over and C.menuHover or nil
+        text = selected and C.accent or over and C.bright or C.text
     elseif style == "segment" then
         fill = selected and C.selected or over and C.navActive or nil
         text = selected and C.accent or over and C.bright or C.muted
@@ -383,7 +392,8 @@ function W.Button(parent, label, width, height, onClick, style)
     button.optionsStyle = style
     -- No Blizzard font template: the client can reapply template colors after PaintButton runs.
     local font = button:CreateFontString(nil, "OVERLAY")
-    W.SetFont(font, (style == "action") and "semibold" or (style == "utility") and "regular" or "medium", 14)
+    W.SetFont(font, (style == "action") and "semibold"
+        or (style == "utility" or style == "menu") and "regular" or "medium", 14)
     button:SetFontString(font)
     button:SetText(label or "")
     font:ClearAllPoints()
@@ -484,6 +494,129 @@ function W.Switch(parent)
     control:SetScript("OnEnter", function(self) self:Paint() end)
     control:SetScript("OnLeave", function(self) self:Paint() end)
     return control
+end
+
+---------------------------------------------------------------------------------------------------
+-- Dropdown menu: one shared popup, opened by layout:Choice controls (a trimmed port of the
+-- PlateSCT menu). A full-screen layer behind it closes it on any outside click.
+---------------------------------------------------------------------------------------------------
+
+local MENU_ROW, MENU_PAD = 32, 6
+local menuFrame
+
+local function CreateMenu()
+    local layer = CreateFrame("Button", nil, UIParent)
+    layer:SetAllPoints(UIParent)
+    layer:SetFrameStrata("FULLSCREEN_DIALOG")
+    layer:EnableMouse(true)
+    layer:EnableMouseWheel(true)
+    layer:Hide()
+    local menu = CreateFrame("Frame", nil, layer)
+    menu:SetFrameStrata("FULLSCREEN_DIALOG")
+    menu:SetFrameLevel(layer:GetFrameLevel() + 2)
+    menu:SetClampedToScreen(true)
+    menu:EnableMouse(true)
+    menu:EnableMouseWheel(true)
+    W.Backdrop(menu, "menu")
+    menu.entries, menu.layer = {}, layer
+    local scroll = CreateFrame("ScrollFrame", nil, menu)
+    scroll:SetPoint("TOPLEFT", MENU_PAD, -MENU_PAD)
+    scroll:SetPoint("BOTTOMRIGHT", -MENU_PAD, MENU_PAD)
+    scroll:EnableMouseWheel(true)
+    local child = CreateFrame("Frame", nil, scroll)
+    scroll:SetScrollChild(child)
+    menu.scroll, menu.child = scroll, child
+    function menu.MouseWheel(_, delta)
+        local maximum = math.max(0, child:GetHeight() - scroll:GetHeight())
+        scroll:SetVerticalScroll(math.max(0, math.min(maximum, scroll:GetVerticalScroll() - delta * MENU_ROW)))
+    end
+    layer:SetScript("OnMouseWheel", function() end)
+    layer:SetScript("OnClick", function() menu:Hide() end)
+    menu:SetScript("OnMouseWheel", menu.MouseWheel)
+    scroll:SetScript("OnMouseWheel", menu.MouseWheel)
+    menu:SetScript("OnHide", function(self)
+        layer:Hide()
+        local owner = self.owner
+        self.owner = nil
+        if owner then
+            owner.optionsOpen = nil
+            if owner.optionsTrailing then W.SetIcon(owner.optionsTrailing, "ChevronDown") end
+            PaintButton(owner)
+        end
+    end)
+    return menu
+end
+
+-- `control.choices` is { { id =, label = }, ... }; control.get() returns the current id and
+-- control.set(id) is called when an entry is picked.
+local function OpenMenu(control)
+    if not control:IsEnabled() then return end
+    if menuFrame and menuFrame.owner == control then menuFrame:Hide(); return end
+    menuFrame = menuFrame or CreateMenu()
+    local menu = menuFrame
+    menu:Hide()   -- hand over from any other owner
+    menu.layer:SetScale(control:GetEffectiveScale() / UIParent:GetEffectiveScale())
+    menu.owner = control
+    local choices, selected = control.choices, control.get()
+    for _, entry in ipairs(menu.entries) do entry:Hide() end
+    local width = control:GetWidth()
+    for index, choice in ipairs(choices) do
+        local entry = menu.entries[index]
+        if not entry then
+            entry = W.Button(menu.child, "", width, MENU_ROW, nil, "menu")
+            entry.optionsRadius = 6
+            entry:EnableMouseWheel(true)
+            entry:SetScript("OnMouseWheel", menu.MouseWheel)
+            local font = entry:GetFontString()
+            font:SetPoint("LEFT", 10, 0)
+            font:SetPoint("RIGHT", -30, 0)
+            entry.check = W.Icon(entry, "Check", 15, GOLD, "OVERLAY")
+            entry.check:SetPoint("RIGHT", -10, 0)
+            menu.entries[index] = entry
+        end
+        local id = choice.id
+        entry:SetText(choice.label)
+        entry.check:SetShown(id == selected)
+        W.SetSelected(entry, id == selected)
+        entry:SetScript("OnClick", function()
+            menu:Hide()
+            if control:IsEnabled() then control.set(id) end
+        end)
+        entry:ClearAllPoints()
+        entry:SetPoint("TOPLEFT", 0, -(index - 1) * MENU_ROW)
+        entry:Show()
+        width = math.max(width, (entry:GetFontString():GetStringWidth() or 0) + 60)
+    end
+    -- Long names widen the popup, within the screen.
+    local screenWidth = UIParent:GetWidth() / menu.layer:GetScale()
+    width = math.min(width, math.max(CONTROL_WIDTH, screenWidth - 40))
+    local fullHeight = math.max(MENU_ROW, #choices * MENU_ROW)
+    local screenHeight = UIParent:GetHeight() / menu.layer:GetScale()
+    local viewHeight = math.min(fullHeight, math.max(MENU_ROW * 2, screenHeight - 80))
+    menu:SetSize(width + MENU_PAD * 2, viewHeight + MENU_PAD * 2)
+    menu.child:SetSize(width, fullHeight)
+    for _, entry in ipairs(menu.entries) do entry:SetWidth(width) end
+    menu:ClearAllPoints()
+    local bottom = control:GetBottom()
+    if bottom and bottom < viewHeight + 24 then
+        menu:SetPoint("BOTTOMRIGHT", control, "TOPRIGHT", 0, 6)
+    else
+        menu:SetPoint("TOPRIGHT", control, "BOTTOMRIGHT", 0, -6)
+    end
+    control.optionsOpen = true
+    if control.optionsTrailing then W.SetIcon(control.optionsTrailing, "ChevronUp") end
+    PaintButton(control)
+    menu.layer:Show()
+    menu:Show()
+    -- Keep the current choice in view when the list is taller than the popup.
+    menu.scroll:SetVerticalScroll(0)
+    for index, choice in ipairs(choices) do
+        if choice.id == selected then
+            menu.scroll:SetVerticalScroll(math.min(math.max(0, fullHeight - viewHeight), (index - 1) * MENU_ROW))
+            break
+        end
+    end
+    menu:Raise()
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -610,6 +743,15 @@ function W.NewLayout(parent, root, opts)
         return label
     end
 
+    -- Small supporting text on its own row, under the heading it belongs to.
+    function layout:Note(text)
+        local row = CreateFrame("Frame", nil, parent)
+        row:SetSize(self.width, 28)
+        local label = W.SetSmall(W.Text(row, text, 0, -2, self.width, MUTED))
+        self:AddRow(row, label, "note")
+        return label
+    end
+
     -- A row: caption and a one-line description on the left, the control on the right.
     function layout:NewRow(label, tip)
         local row = CreateFrame("Frame", nil, parent)
@@ -635,8 +777,8 @@ function W.NewLayout(parent, root, opts)
         row.layoutControl = control
         root.controls[#root.controls + 1] = control
         local function Tip()
-            local note = (not NS.available[setting.cvar]) and "Not available on this client." or nil
-            return { title = setting.label, body = note, foot = setting.cvar }
+            local note = (not NS.available[setting.cvar]) and L["Not available on this client."] or nil
+            return { title = L[setting.label], body = note, foot = setting.cvar }
         end
         W.Tooltip(row, Tip)
         W.Tooltip(control, Tip)
@@ -657,7 +799,7 @@ function W.NewLayout(parent, root, opts)
     local function SetAvailable(control)
         local available = NS.available[control.setting.cvar] and true or false
         local row = control.row
-        row.layoutDescription:SetText(available and (row.tip or "") or "This setting is not available on this client.")
+        row.layoutDescription:SetText(available and (row.tip or "") or L["This setting is not available on this client."])
         control.row.layoutCaption:SetTextColor(RGB(available and TEXT or C.disabledText))
         control:SetAlpha(available and 1 or 0.45)
         SetControlEnabled(control, available)
@@ -665,7 +807,7 @@ function W.NewLayout(parent, root, opts)
     end
 
     function layout:Slider(setting)
-        local row, caption, controlWidth = self:NewRow(setting.label, setting.tip)
+        local row, caption, controlWidth = self:NewRow(L[setting.label], L[setting.tip])
         local minimum, maximum, step = setting.min, setting.max, setting.step
         local control = CreateFrame("Slider", nil, row)
         control:SetOrientation("HORIZONTAL")
@@ -737,7 +879,7 @@ function W.NewLayout(parent, root, opts)
         end)
         W.Tooltip(entry, function()
             if not control:IsEnabled() then return nil end
-            return "Click to type an exact value."
+            return L["Click to type an exact value."]
         end)
         local function CloseEntry()
             edit:Hide(); entry:Show(); valueText:Show()
@@ -782,7 +924,7 @@ function W.NewLayout(parent, root, opts)
 
     -- Two or three exact choices as a segmented control.
     function layout:Segments(setting)
-        local row, caption, controlWidth = self:NewRow(setting.label, setting.tip)
+        local row, caption, controlWidth = self:NewRow(L[setting.label], L[setting.tip])
         local control = CreateFrame("Frame", nil, row)
         control:SetHeight(36)
         W.Paint(control, C.field, 9)
@@ -791,7 +933,7 @@ function W.NewLayout(parent, root, opts)
         Register(control, row, setting)
         for _, option in ipairs(setting.options) do
             local value = option[1]
-            local segment = W.Button(control, option[2], 60, 30, function()
+            local segment = W.Button(control, L[option[2]], 60, 30, function()
                 if NS.available[setting.cvar] then
                     NS.Set(setting.cvar, value)
                     control:Refresh()
@@ -842,7 +984,7 @@ function W.NewLayout(parent, root, opts)
 
     -- An on/off switch bound to a 0 / 1 CVar.
     function layout:Toggle(setting)
-        local row = self:NewRow(setting.label, setting.tip)
+        local row = self:NewRow(L[setting.label], L[setting.tip])
         local control = W.Switch(row)
         control.layoutType = "switch"
         Register(control, row, setting)
@@ -858,6 +1000,46 @@ function W.NewLayout(parent, root, opts)
             self:Paint()
         end
         control:Refresh()
+        return control
+    end
+
+    -- A dropdown: the current choice on a button, the rest in a popup menu. `choices` is
+    -- { { id =, label = }, ... } (labels already translated); get() returns the current id.
+    function layout:Choice(label, tip, choices, get, set)
+        local row, _, controlWidth = self:NewRow(label, tip)
+        local control = W.Button(row, "", controlWidth, CONTROL_HEIGHT, nil, "flat")
+        control.layoutType = "choice"
+        local font = control:GetFontString()
+        font:SetPoint("LEFT", 12, 0)
+        font:SetPoint("RIGHT", -32, 0)
+        font:SetJustifyH("LEFT")
+        font:SetWordWrap(false)
+        control.optionsTrailing = W.Icon(control, "ChevronDown", 16, C.muted, "OVERLAY")
+        control.optionsTrailing:SetPoint("RIGHT", -10, 0)
+        control.choices, control.get, control.set = choices, get, set
+        row.layoutControl = control
+        root.controls[#root.controls + 1] = control
+        control:SetScript("OnClick", function() OpenMenu(control) end)
+        Hook(control, "OnHide", function()
+            if menuFrame and menuFrame.owner == control then menuFrame:Hide() end
+        end)
+        function control:Refresh()
+            local value, text = self.get(), ""
+            for _, choice in ipairs(self.choices) do
+                if choice.id == value then text = choice.label; break end
+            end
+            self:SetText(text)
+        end
+        control:Refresh()
+        return control
+    end
+
+    -- A description on the left and a button on the right that runs `onClick`.
+    function layout:Action(label, tip, onClick)
+        local row = self:NewRow("", tip)
+        local control = W.Button(row, label, 160, CONTROL_HEIGHT, function() onClick() end, "flat")
+        control.layoutType = "action"
+        row.layoutControl = control
         return control
     end
 
@@ -877,6 +1059,10 @@ function W.NewLayout(parent, root, opts)
             control:SetWidth(controlWidth)
             control:Fit(controlWidth)
             controlHeight = 36
+        elseif control.layoutType == "choice" then
+            control:SetWidth(controlWidth)
+        elseif control.layoutType == "action" then
+            control:SetWidth(math.min(160, controlWidth))
         end
         caption:SetWidth(textWidth)
         local description = row.layoutDescription
@@ -916,6 +1102,9 @@ function W.NewLayout(parent, root, opts)
             elseif row.layoutKind == "warning" then
                 caption:SetWidth(self.width - 54)
                 height = math.max(18, caption:GetStringHeight()) + 24
+            elseif row.layoutKind == "note" then
+                caption:SetWidth(self.width)
+                height = math.max(16, caption:GetStringHeight()) + 12
             else
                 height = PlaceControlRow(row, self.width)
             end

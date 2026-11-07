@@ -5,6 +5,7 @@
 local _, NS = ...
 local W = NS.W
 local C = W.COLORS
+local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 
 local floor, random = math.floor, math.random
 
@@ -44,6 +45,7 @@ local PHYS = {
 NS.PHYS = PHYS
 
 -- `enabled` names the CVar that switches the column on; a column that is off shows "Off".
+-- `title` is an English key into NS.L, translated when the pane is built.
 local COLUMNS = {
     { kind = "hit", title = "Hit", color = { 1, 1, 1 }, min = 90, max = 420, interval = { 0.85, 1.25 },
         enabled = "floatingCombatTextCombatDamage_v2" },
@@ -256,7 +258,7 @@ function NS.CreatePreviewPane(content, bar)
             divider:SetPoint("BOTTOMLEFT", -8, 4)
             divider:SetColorTexture(C.line[1], C.line[2], C.line[3], 1)
         end
-        local caption = W.Text(column, def.title, 0, 0, nil, C.dim, "semibold", 13)
+        local caption = W.Text(column, L[def.title], 0, 0, nil, C.dim, "semibold", 13)
         caption:ClearAllPoints()
         caption:SetPoint("TOP", 0, -2)
         caption:SetJustifyH("CENTER")
@@ -266,7 +268,7 @@ function NS.CreatePreviewPane(content, bar)
         clip:SetPoint("BOTTOMRIGHT", -2, 2)
         clip:SetClipsChildren(true)
         column.clip, column.caption = clip, caption
-        column.offLabel = W.Text(clip, "Off", 0, 0, nil, C.dim, "medium", 14)
+        column.offLabel = W.Text(clip, L["Off"], 0, 0, nil, C.dim, "medium", 14)
         column.offLabel:ClearAllPoints()
         column.offLabel:SetPoint("CENTER", clip, "CENTER", 0, 0)
         column.offLabel:SetJustifyH("CENTER")

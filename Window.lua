@@ -4,6 +4,7 @@
 local ADDON_NAME, NS = ...
 local W = NS.W
 local C = W.COLORS
+local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 
 local WINDOW_WIDTH, WINDOW_HEIGHT = 840, 740   -- default size
 local MIN_WIDTH, MIN_HEIGHT = 720, 560           -- smallest size the grip allows
@@ -16,74 +17,118 @@ local GOLD = C.accent
 
 local session = { page = "general", scroll = {} }
 
-local WARNING = "This adjusts Blizzard's own floating combat text, so it works 100% with the default game. "
-    .. "Blizzard does not expose fonts, colors or icons for it, so no further customisation can be added."
+-- Where translation mistakes are reported (shown from the Language section).
+local TRANSLATION_ISSUES_URL = "https://github.com/Spatovaliyski/ForeverCombatStyle/issues"
+StaticPopupDialogs["FOREVERCOMBATSTYLE_TRANSLATION_ISSUES_URL"] = {
+    text = "",   -- filled in when shown, so it follows the language
+    button1 = CLOSE,
+    hasEditBox = true,
+    editBoxWidth = 360,
+    OnShow = function(self)
+        local editBox = self.GetEditBox and self:GetEditBox() or self.editBox or self.EditBox
+        editBox:SetText(TRANSLATION_ISSUES_URL)
+        editBox:SetFocus()
+        editBox:HighlightText()
+    end,
+    EditBoxOnEnterPressed = function(self) self:GetParent():Hide() end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
 
 local function S(cvar)
     return NS.BY_CVAR[cvar]
 end
 
-local PAGES = {
-    {
-        id = "general", label = "General", icon = "General",
-        subtitle = "Number style, your own combat text, and how the addon behaves.",
-        build = function(layout)
-            layout:Warning(WARNING)
-            layout:Heading("Number Style")
-            layout:Segments(S("classicStyleWorldText"))
-            layout:Slider(S("WorldTextScale_v2"))
-            layout:Heading("Your Combat Text")
-            layout:Toggle(S("enableFloatingCombatText"))
-            layout:Segments(S("floatingCombatTextFloatMode_v2"))
-            layout:Heading("Behaviour")
-            layout:Switch("Re-apply at login",
-                "Put your settings back at login if the client reset them.",
-                function() return NS.db.reapply end,
-                function(value) NS.db.reapply = value end)
-        end,
-    },
-    {
-        id = "combat", label = "Combat", icon = "Combat",
-        subtitle = "Choose what appears: damage, healing, shields and pets.",
-        build = function(layout)
-            layout:Warning(WARNING)
-            layout:Heading("Damage")
-            layout:Toggle(S("floatingCombatTextCombatDamage_v2"))
-            layout:Toggle(S("floatingCombatTextCombatDamageAllAutos_v2"))
-            layout:Toggle(S("floatingCombatTextCombatLogPeriodicSpells_v2"))
-            layout:Heading("Healing")
-            layout:Toggle(S("floatingCombatTextCombatHealing_v2"))
-            layout:Toggle(S("floatingCombatTextCombatHealingAbsorbSelf_v2"))
-            layout:Toggle(S("floatingCombatTextCombatHealingAbsorbTarget_v2"))
-            layout:Heading("Pets")
-            layout:Toggle(S("floatingCombatTextPetMeleeDamage_v2"))
-            layout:Toggle(S("floatingCombatTextPetSpellDamage_v2"))
-        end,
-    },
-    {
-        id = "appearance", label = "Appearance", icon = "Appearance",
-        subtitle = "How numbers fall, drift, start and fade.",
-        build = function(layout)
-            layout:Warning(WARNING)
-            layout:Heading("Fall & Spread")
-            layout:Slider(S("WorldTextGravity_v2"))
-            layout:Slider(S("WorldTextStartPosRandomness_v2"))
-            layout:Heading("Direction")
-            layout:Slider(S("floatingCombatTextCombatDamageDirectionalScale_v2"))
-            layout:Slider(S("floatingCombatTextCombatDamageDirectionalOffset_v2"))
-            layout:Heading("Start Height")
-            layout:Slider(S("WorldTextScreenY_v2"))
-            layout:Slider(S("WorldTextCritScreenY_v2"))
-            layout:Heading("Pop & Fade")
-            layout:Slider(S("WorldTextRampDuration_v2"))
-            layout:Slider(S("WorldTextRampPow_v2"))
-            layout:Slider(S("WorldTextRampPowCrit_v2"))
-            layout:Slider(S("WorldTextMinAlpha_v2"))
-        end,
-    },
-}
+-- The pages are made each time the window is built, not at load: every label is looked up in
+-- the language that is active then (the window is rebuilt when the language changes).
+local function BuildPages()
+    local warning = L["This adjusts Blizzard's own floating combat text, so it works 100% with the default game. Blizzard does not expose fonts, colors or icons for it, so no further customisation can be added."]
+    return {
+        {
+            id = "general", label = L["General"], icon = "General",
+            subtitle = L["Number style, your own combat text, and how the addon behaves."],
+            build = function(layout)
+                layout:Warning(warning)
+                layout:Heading(L["Number Style"])
+                layout:Segments(S("classicStyleWorldText"))
+                layout:Slider(S("WorldTextScale_v2"))
+                layout:Heading(L["Your Combat Text"])
+                layout:Toggle(S("enableFloatingCombatText"))
+                layout:Segments(S("floatingCombatTextFloatMode_v2"))
+                layout:Heading(L["Behaviour"])
+                layout:Switch(L["Re-apply at login"],
+                    L["Put your settings back at login if the client reset them."],
+                    function() return NS.db.reapply end,
+                    function(value) NS.db.reapply = value end)
+                layout:Heading(L["Language"])
+                local choices = {}
+                for _, option in ipairs(NS.LOCALE_OPTIONS) do
+                    choices[#choices + 1] = { id = option.id, label = NS:GetLocaleOptionLabel(option) }
+                end
+                layout:Choice(L["Language"],
+                    L["Choose the language used by Forever Combat Style panels and messages."], choices,
+                    function() return NS.db.locale end,
+                    function(value) NS:SetLocalePreference(value) end)
+                -- Every translation here is machine-made: say so, and say where to report problems.
+                if NS:ResolveLocaleCode() ~= "enUS" then
+                    layout:Note(L["This translation was generated with AI. If you find inconsistent terminology or incorrect wording, please report it through GitHub Issues. Thank you for your help! Translation contributors will be credited."])
+                    layout:Action(L["Open Link"], L["Press Ctrl+C to copy the URL."], function()
+                        StaticPopupDialogs["FOREVERCOMBATSTYLE_TRANSLATION_ISSUES_URL"].text =
+                            L["Press Ctrl+C to copy the URL."]
+                        StaticPopup_Show("FOREVERCOMBATSTYLE_TRANSLATION_ISSUES_URL")
+                    end)
+                end
+            end,
+        },
+        {
+            id = "combat", label = L["Combat"], icon = "Combat",
+            subtitle = L["Choose what appears: damage, healing, shields and pets."],
+            build = function(layout)
+                layout:Warning(warning)
+                layout:Heading(L["Damage"])
+                layout:Toggle(S("floatingCombatTextCombatDamage_v2"))
+                layout:Toggle(S("floatingCombatTextCombatDamageAllAutos_v2"))
+                layout:Toggle(S("floatingCombatTextCombatLogPeriodicSpells_v2"))
+                layout:Heading(L["Healing"])
+                layout:Toggle(S("floatingCombatTextCombatHealing_v2"))
+                layout:Toggle(S("floatingCombatTextCombatHealingAbsorbSelf_v2"))
+                layout:Toggle(S("floatingCombatTextCombatHealingAbsorbTarget_v2"))
+                layout:Heading(L["Pets"])
+                layout:Toggle(S("floatingCombatTextPetMeleeDamage_v2"))
+                layout:Toggle(S("floatingCombatTextPetSpellDamage_v2"))
+            end,
+        },
+        {
+            id = "appearance", label = L["Appearance"], icon = "Appearance",
+            subtitle = L["How numbers fall, drift, start and fade."],
+            build = function(layout)
+                layout:Warning(warning)
+                layout:Heading(L["Fall & Spread"])
+                layout:Slider(S("WorldTextGravity_v2"))
+                layout:Slider(S("WorldTextStartPosRandomness_v2"))
+                layout:Heading(L["Direction"])
+                layout:Slider(S("floatingCombatTextCombatDamageDirectionalScale_v2"))
+                layout:Slider(S("floatingCombatTextCombatDamageDirectionalOffset_v2"))
+                layout:Heading(L["Start Height"])
+                layout:Slider(S("WorldTextScreenY_v2"))
+                layout:Slider(S("WorldTextCritScreenY_v2"))
+                layout:Heading(L["Pop & Fade"])
+                layout:Slider(S("WorldTextRampDuration_v2"))
+                layout:Slider(S("WorldTextRampPow_v2"))
+                layout:Slider(S("WorldTextRampPowCrit_v2"))
+                layout:Slider(S("WorldTextMinAlpha_v2"))
+            end,
+        },
+    }
+end
 
 local function Build()
+    local PAGES = BuildPages()
+    -- Labels of a window that was replaced (language change) are no longer worth re-laying.
+    W.texts = {}
     local frame = CreateFrame("Frame", "ForeverCombatStyleFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
     frame:Hide()
     frame:SetSize(WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -94,8 +139,12 @@ local function Build()
     frame:EnableMouse(true)
     frame:SetMovable(true)
     frame:SetResizable(true)
-    -- ESC closes the window through the game's special-frames list.
-    table.insert(UISpecialFrames, "ForeverCombatStyleFrame")
+    -- ESC closes the window through the game's special-frames list (once, even after a rebuild).
+    local listed = false
+    for _, name in ipairs(UISpecialFrames) do
+        if name == "ForeverCombatStyleFrame" then listed = true break end
+    end
+    if not listed then table.insert(UISpecialFrames, "ForeverCombatStyleFrame") end
     W.Backdrop(frame, "window")
     frame.controls, frame.layouts, frame.pages = {}, {}, {}
     frame.navButtons, frame.utilityButtons = {}, {}
@@ -122,13 +171,13 @@ local function Build()
     logoIcon:SetPoint("CENTER")
     W.Text(titleBar, "Forever Combat Style", 64, -15, 300, C.bright, "semibold", 15)
     local gameVersion = GetBuildInfo and GetBuildInfo()
-    local version = W.Text(titleBar, "v" .. NS.VERSION .. (gameVersion and ("  ·  Client " .. gameVersion) or ""),
+    local version = W.Text(titleBar, "v" .. NS.VERSION .. (gameVersion and ("  ·  " .. L["Client"] .. " " .. gameVersion) or ""),
         64, -34, 360, C.muted)
     version:SetWordWrap(false)
     local close = W.CloseButton(frame, function() frame:Hide() end)
     close:SetPoint("TOPRIGHT", -16, -16)
     close:SetFrameLevel(titleBar:GetFrameLevel() + 5)
-    W.Tooltip(close, "Close")
+    W.Tooltip(close, L["Close"])
 
     -- Sidebar: pages, then quiet utilities pinned to the bottom.
     local sidebar = CreateFrame("Frame", nil, frame)
@@ -139,7 +188,7 @@ local function Build()
     local sidebarLine = W.Line(sidebar, C.line)
     sidebarLine:SetWidth(1)
     sidebarLine:SetPoint("TOPRIGHT"); sidebarLine:SetPoint("BOTTOMRIGHT")
-    local hint = W.Text(sidebar, "/fcs  ·  ESC to close", 0, 0, 176, C.dim)
+    local hint = W.Text(sidebar, L["/fcs  ·  ESC to close"], 0, 0, 176, C.dim)
     hint:ClearAllPoints()
     hint:SetPoint("BOTTOMLEFT", 22, 14)
     hint:SetWordWrap(false)
@@ -153,8 +202,9 @@ local function Build()
     content:SetPoint("BOTTOMRIGHT", -1, 1)
     frame.pageTitle = W.Text(content, "", 32, -24, 560, C.bright, "semibold", 22)
     frame.pageTitle:SetWordWrap(false)
-    frame.subtitle = W.Text(content, "", 32, -52, 560, C.muted)
-    frame.subtitle:SetWordWrap(false)
+    -- The subtitle may wrap onto a second line: translations run longer than the English text.
+    frame.subtitle = W.Text(content, "", 32, -52, nil, C.muted)
+    frame.subtitle:SetPoint("TOPRIGHT", content, "TOPRIGHT", -32, -52)
     frame.pageArea = CreateFrame("Frame", nil, content)
     frame.pageArea:SetClipsChildren(true)
 
@@ -163,18 +213,18 @@ local function Build()
     local barLine = W.Line(previewBar, C.line)
     barLine:SetHeight(1)
     barLine:SetPoint("TOPLEFT"); barLine:SetPoint("TOPRIGHT")
-    local toggle = W.NavButton(previewBar, "Hide preview", "ChevronDown", 140, 30, function()
+    local toggle = W.NavButton(previewBar, L["Hide preview"], "ChevronDown", 140, 30, function()
         NS.db.showPreview = not NS.db.showPreview
         frame.previewPane:UpdateLayout()
     end, "ghost")
     toggle:SetPoint("LEFT", 12, 0)
-    W.Tooltip(toggle, "Show sample hits, crits and incoming damage inside this window.")
-    local replay = W.Button(previewBar, "Replay", 100, 30, function()
+    W.Tooltip(toggle, L["Show sample hits, crits and incoming damage inside this window."])
+    local replay = W.Button(previewBar, L["Replay"], 100, 30, function()
         frame.previewPane:Poke()
     end, "flat")
     replay:SetPoint("RIGHT", -16, 0)
-    W.Tooltip(replay, "Restart the sample numbers.")
-    local note = W.Text(previewBar, "Approximate preview  ·  check on a real target", 0, 0, nil, C.dim)
+    W.Tooltip(replay, L["Restart the sample numbers."])
+    local note = W.Text(previewBar, L["Approximate preview  ·  check on a real target"], 0, 0, nil, C.dim)
     note:ClearAllPoints()
     note:SetPoint("RIGHT", replay, "LEFT", -16, 0)
     note:SetJustifyH("RIGHT")
@@ -196,7 +246,7 @@ local function Build()
         frame.pageArea:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -PAGE_TOP)
         frame.pageArea:SetPoint("BOTTOMRIGHT", previewBar, "TOPRIGHT", 0, 0)
         W.RefreshText(toggle:GetFontString())
-        toggle:SetText(open and "Hide preview" or "Show preview")
+        toggle:SetText(open and L["Hide preview"] or L["Show preview"])
         W.SetIcon(toggle.optionsIcon, open and "ChevronDown" or "ChevronUp")
         toggle:SetWidth(toggle:GetFontString():GetStringWidth() + 50)
         for _, entry in pairs(frame.pages) do entry.view:UpdateScroll() end
@@ -241,16 +291,16 @@ local function Build()
         frame.pages[id] = { page = page, view = view, layout = layout }
     end
 
-    local reload = W.NavButton(sidebar, "Reload UI", "Transfer", width, UTILITY_HEIGHT,
+    local reload = W.NavButton(sidebar, L["Reload UI"], "Transfer", width, UTILITY_HEIGHT,
         function() ReloadUI() end, "utility")
     reload:SetPoint("BOTTOMLEFT", 12, 38 + UTILITY_STEP)
-    W.Tooltip(reload, "Reload the interface. Use it if a change does not show up in game.")
-    local reset = W.NavButton(sidebar, "Reset Defaults", "Reset", width, UTILITY_HEIGHT, function()
+    W.Tooltip(reload, L["Reload the interface. Use it if a change does not show up in game."])
+    local reset = W.NavButton(sidebar, L["Reset Defaults"], "Reset", width, UTILITY_HEIGHT, function()
         NS.Reset()
         frame:Refresh()
     end, "utility")
     reset:SetPoint("BOTTOMLEFT", 12, 38)
-    W.Tooltip(reset, "Put every combat text setting back to the WoW Forever default.")
+    W.Tooltip(reset, L["Put every combat text setting back to the WoW Forever default."])
 
     -- Fit the window to the screen. The default size sets the scale on small screens; the saved
     -- size is restored within what fits, and the last position is kept while the game runs.
@@ -310,7 +360,7 @@ local function Build()
         NS.db.windowWidth, NS.db.windowHeight = nil, nil
         frame:FitToScreen()
     end)
-    W.Tooltip(grip, "Drag to resize. Double-click to restore the default size.")
+    W.Tooltip(grip, L["Drag to resize. Double-click to restore the default size."])
     frame.resizeGrip = grip
 
     frame:SetScript("OnEvent", function(self)
@@ -351,12 +401,18 @@ local function Build()
         end
     end)
 
-    NS.OnChange(function() pane:Poke() end)
     NS.RefreshWindow = function()
         if frame:IsShown() then frame:Refresh() end
     end
     return frame
 end
+
+-- Restart the preview whenever a CVar changes. Registered once; it follows whichever window is
+-- current, since the window is rebuilt when the language changes.
+NS.OnChange(function()
+    local frame = NS.frame
+    if frame and frame.previewPane then frame.previewPane:Poke() end
+end)
 
 function NS.Toggle()
     if not NS.frame then
@@ -369,13 +425,31 @@ function NS.Toggle()
     end
 end
 
+-- Build the window again in the current language (called after the language changes). A frame
+-- cannot be destroyed, so the old one is hidden and dropped; its position is kept in `session`.
+-- If the window was never opened, the first /fcs builds it in the new language anyway.
+function NS:RebuildWindow()
+    local old = NS.frame
+    if not old then
+        return
+    end
+    local shown = old:IsShown()
+    old:Hide()
+    old:UnregisterAllEvents()
+    old:SetParent(nil)
+    NS.frame = Build()
+    if shown then
+        NS.frame:Show()
+    end
+end
+
 -- /fcs debug: report how a few labels are being drawn (for diagnosing blank text).
 function NS.Debug()
     if not NS.frame then
         NS.Print("open the window once with /fcs, then run /fcs debug.")
         return
     end
-    local wanted = { ["Number Style"] = true, ["Style"] = true, ["Size"] = true, ["Behaviour"] = true }
+    local wanted = { [L["Number Style"]] = true, [L["Style"]] = true, [L["Size"]] = true, [L["Behaviour"]] = true }
     for _, region in ipairs(W.texts) do
         local text = region:GetText()
         if text and wanted[text] then

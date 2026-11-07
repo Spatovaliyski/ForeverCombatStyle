@@ -18,6 +18,7 @@ customisation (fonts, colors, icons) can be added.
 | General | Your Combat Text | Your scrolling text (on / off) | `enableFloatingCombatText` | 0 |
 | General | Your Combat Text | Float mode (Up / Down / Arc) | `floatingCombatTextFloatMode_v2` | 1 |
 | General | Behaviour | Re-apply at login | (addon setting) | on |
+| General | Language | Language (Auto or one of 10 languages) | (addon setting) | Auto |
 | Combat | Damage | Damage over targets | `floatingCombatTextCombatDamage_v2` | on |
 | Combat | Damage | All auto-attacks | `floatingCombatTextCombatDamageAllAutos_v2` | on |
 | Combat | Damage | Damage over time | `floatingCombatTextCombatLogPeriodicSpells_v2` | on |
@@ -64,10 +65,30 @@ settings drive the preview's size animation, and "Minimum opacity" is not shown 
 
 The Up / Down / Arc labels (1 / 2 / 3) follow Blizzard's combat text scroll options and are not on the wiki page.
 
+## Languages
+
+English, Français, Deutsch, Español, Русский, Italiano, Português, 简体中文, 繁體中文 and 한국어, set up the same way as
+PlateSCT. Under General > Language, "Auto" follows the game client (esMX uses Español, ptPT uses Português, any other
+unsupported client uses English) or you can pick a language. Changing it rebuilds the window at once. Anything without a
+translation falls back to English. The addon description in the AddOns list is translated too (`## Notes-xxXX` in the
+TOC).
+
+The translations are AI-generated; the Language section says so for every language except English and has an Open Link
+button that shows the GitHub Issues URL to copy. Terms shared with PlateSCT reuse its wording.
+
+- `Locales/Locale.lua`: the registry (`NS.L`, `NS.RegisterLocale`, language choice and fallback). It loads first.
+- `Locales/enUS.lua`: every string, written `L["English text"] = "English text"`. The English text is the key.
+- `Locales/<code>.lua`: one file per language, with the same keys in the same order.
+- Text is looked up where it is drawn (`L["..."]`), never when a file loads, because the language can change while the
+  game runs. The `label`, `tip` and option names in `NS.SETTINGS` (`Core.lua`) and the preview column titles are
+  English keys that are translated when drawn.
+- To add text: add the key to `enUS.lua` and to every other locale file. `/fcs debug` output stays in English.
+
 ## Files
 
 - `Core.lua`: CVar list, reading/writing, saved variables, slash commands
-- `Widgets.lua`: palette, rounded shapes, buttons, sliders, switches, rows (ported from the PlateSCT settings)
+- `Locales/`: the language registry and one file per language (see above)
+- `Widgets.lua`: palette, rounded shapes, buttons, sliders, switches, dropdown, rows (ported from the PlateSCT settings)
 - `Preview.lua`: the preview drawer and number animation
 - `Window.lua`: the window
 - `Media/`: rounded-corner texture, icons and Source Sans 3 fonts (SIL OFL, see `Media/Fonts/SourceSans3-OFL.md`), copied from PlateSCT
