@@ -146,11 +146,21 @@ function W.RefreshText(region)
     region:SetText(text)
 end
 
--- Every label made by W.Text, so the whole window can be re-laid when it opens.
+-- Set a region's own font (the role and size it was given) again. The client can change a
+-- button's label font when the button changes state, so buttons do this on every state event.
+function W.ReapplyFont(region)
+    if region.optionsSize then
+        W.SetFont(region, region.optionsRole, region.optionsSize)
+    end
+end
+
+-- Every label made by W.Text and every button label made by W.Button, so the whole window can
+-- be re-laid when it opens.
 W.texts = {}
 
 function W.RefreshAllText()
     for _, region in ipairs(W.texts) do
+        if region.optionsButtonLabel then W.ReapplyFont(region) end
         W.RefreshText(region)
     end
 end
@@ -418,6 +428,14 @@ function W.Button(parent, label, width, height, onClick, style)
     font:SetPoint("RIGHT", -inset, 0)
     font:SetJustifyH(centered and "CENTER" or "LEFT")
     font:SetWordWrap(false)
+    -- The client can change the label's font when the button changes state (shown, hovered,
+    -- enabled, pressed), as PlateSCT found, so set the addon font again on each of those events.
+    -- These hooks come before the paint hooks below: the font goes on first, the color last.
+    font.optionsButtonLabel = true
+    W.texts[#W.texts + 1] = font
+    for _, event in ipairs({ "OnEnter", "OnLeave", "OnEnable", "OnDisable", "OnShow", "OnMouseUp" }) do
+        Hook(button, event, function() W.ReapplyFont(font) end)
+    end
     Hook(button, "OnEnter", function(self)
         if self.optionsStyle == "action" then W.PaintAction(self, "hover") else PaintButton(self) end
     end)

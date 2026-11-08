@@ -14,6 +14,8 @@ local PAGE_TOP = 92
 local NAV_TOP, NAV_STEP, NAV_HEIGHT = 24, 38, 36
 local UTILITY_STEP, UTILITY_HEIGHT = 32, 30
 local GOLD = C.accent
+-- Seconds after the window opens at which every label is laid out again (see OnShow).
+local RELAY_DELAYS = { 0.3, 1.0, 2.5 }
 
 local session = { page = "general", scroll = {} }
 
@@ -231,6 +233,7 @@ local function Build()
         frame.previewPane:Poke()
     end, "flat")
     replay:SetPoint("RIGHT", -16, 0)
+    frame.replay = replay   -- kept so /fcs debug can inspect its label
     W.Tooltip(replay, L["Restart the sample numbers."])
     local note = W.Text(previewBar, L["Approximate preview  ·  check on a real target"], 0, 0, nil, C.dim)
     note:ClearAllPoints()
@@ -392,7 +395,9 @@ local function Build()
         self:RegisterEvent("DISPLAY_SIZE_CHANGED")
         self:FitToScreen()
         -- Text laid out before its font loaded can stay blank, and widths are only reliable once
-        -- fonts have loaded: re-lay every label now and once more a moment later.
+        -- fonts have loaded: re-lay every label now and again at RELAY_DELAYS after the window
+        -- opens. On the first open after a fresh game start the client can take longer than a
+        -- moment to load the fonts (a /reload keeps them loaded, which hides the problem).
         W.RefreshAllText()
         pane:UpdateLayout()
         pane:LayoutColumns()
@@ -400,13 +405,18 @@ local function Build()
         self:SelectPage(session.page)
         pane:Poke()
         if C_Timer and C_Timer.After then
-            C_Timer.After(0.3, function()
-                if self:IsShown() then
-                    W.RefreshAllText()
-                    pane:LayoutColumns()
-                    self:Refresh()
-                end
-            end)
+            -- A pass from an earlier open must not run after the window was closed and reopened.
+            self.openCount = (self.openCount or 0) + 1
+            local opened = self.openCount
+            for _, delay in ipairs(RELAY_DELAYS) do
+                C_Timer.After(delay, function()
+                    if self:IsShown() and self.openCount == opened then
+                        W.RefreshAllText()
+                        pane:LayoutColumns()
+                        self:Refresh()
+                    end
+                end)
+            end
         end
     end)
 
@@ -477,5 +487,42 @@ function NS.Debug()
                 tostring(path):match("[^\\]+$") or "?", tostring(size),
                 region:GetStringWidth() or 0, region:GetStringHeight() or 0))
         end
+    end
+    -- The labels that draw blank, next to one that draws fine (a row caption).
+    local function Describe(name, region)
+        if not region then
+            NS.Print(name .. ": not found")
+            return
+        end
+        local path, size = region:GetFont()
+        local r, g, b, a = region:GetTextColor()
+        local parent = region:GetParent()
+        local layer, sublevel = region:GetDrawLayer()
+        NS.Print(string.format(
+            "%s: text=%q shown=%s visible=%s alpha=%.2f font=%s size=%s color=%.2f/%.2f/%.2f/%.2f "
+                .. "width=%.0f height=%.0f layer=%s/%s parent: level=%s alpha=%.2f shown=%s",
+            name, string.sub(region:GetText() or "", 1, 24), tostring(region:IsShown()),
+            tostring(region:IsVisible()), region.GetEffectiveAlpha and region:GetEffectiveAlpha() or -1,
+            tostring(path):match("[^\\]+$") or "?", tostring(size), r or -1, g or -1, b or -1, a or -1,
+            region:GetStringWidth() or 0, region:GetStringHeight() or 0, tostring(layer), tostring(sublevel),
+            parent and tostring(parent:GetFrameLevel()) or "?", parent and parent:GetEffectiveAlpha() or -1,
+            parent and tostring(parent:IsShown()) or "?"))
+    end
+    local combat = NS.frame.pages and NS.frame.pages.combat
+    if combat then
+        local sample, warning
+        for _, row in ipairs(combat.layout.rows) do
+            if row.layoutKind == "warning" and not warning then warning = row.layoutCaption end
+            if row.layoutKind == "control" and not sample then sample = row end
+        end
+        Describe("warning text", warning)
+        Describe("row caption (draws)", sample and sample.layoutCaption)
+        Describe("row description", sample and sample.layoutDescription)
+    end
+    local replay = NS.frame.replay
+    if replay then
+        NS.Print(string.format("Replay button: shown=%s enabled=%s width=%.0f height=%.0f",
+            tostring(replay:IsShown()), tostring(replay:IsEnabled()), replay:GetWidth() or 0, replay:GetHeight() or 0))
+        Describe("Replay label", replay:GetFontString())
     end
 end
