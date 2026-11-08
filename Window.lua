@@ -6,11 +6,18 @@ local W = NS.W
 local C = W.COLORS
 local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 
-local WINDOW_WIDTH, WINDOW_HEIGHT = 840, 740   -- default size
+local WINDOW_WIDTH, WINDOW_HEIGHT = 840, 780   -- default size
 local MIN_WIDTH, MIN_HEIGHT = 720, 560           -- smallest size the grip allows
 local SIDEBAR_WIDTH, HEADER_HEIGHT = 200, 64
-local BAR_HEIGHT, STAGE_HEIGHT = 44, 180
+local BAR_HEIGHT = 44
 local PAGE_TOP = 92
+-- The preview stage (the dark area with the sample numbers). Unless the player has dragged it, its
+-- height follows the window: STAGE_FRACTION of the content height, kept between the AUTO limits.
+-- A dragged height is saved in NS.db.previewHeight, between STAGE_MIN and what leaves the settings
+-- page PAGE_MIN of height.
+local STAGE_MIN, STAGE_AUTO_MIN, STAGE_AUTO_MAX, STAGE_FRACTION = 150, 230, 440, 0.36
+local PAGE_MIN = 170
+local DRAG_DEAD_ZONE = 2   -- px the cursor must move before a drag changes the height
 local NAV_TOP, NAV_STEP, NAV_HEIGHT = 24, 38, 36
 local UTILITY_STEP, UTILITY_HEIGHT = 32, 30
 local GOLD = C.accent
@@ -55,7 +62,19 @@ local function BuildPages()
             build = function(layout)
                 layout:Warning(warning)
                 layout:Heading(L["Number Style"])
-                layout:Segments(S("classicStyleWorldText"))
+                layout:StyleCards(S("classicStyleWorldText"), {
+                    [0] = {
+                        tagline = L["Smooth reveal"],
+                        text = L["Numbers ease into view and settle into place gradually, for a softer, more fluid feel."],
+                    },
+                    [1] = {
+                        tagline = L["Instant and direct"],
+                        text = L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."],
+                    },
+                })
+                layout:Note(string.format(
+                    L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."],
+                    L["Appearance"]))
                 layout:Slider(S("WorldTextScale_v2"))
                 layout:Heading(L["Your Combat Text"])
                 layout:Toggle(S("enableFloatingCombatText"))
@@ -218,11 +237,16 @@ local function Build()
     frame.pageArea = CreateFrame("Frame", nil, content)
     frame.pageArea:SetClipsChildren(true)
 
-    local previewBar = CreateFrame("Frame", nil, content)
+    -- The strip above the stage is also its drag handle: pull it up for a taller preview.
+    local previewBar = CreateFrame("Button", nil, content)
     previewBar:SetHeight(BAR_HEIGHT)
     local barLine = W.Line(previewBar, C.line)
     barLine:SetHeight(1)
     barLine:SetPoint("TOPLEFT"); barLine:SetPoint("TOPRIGHT")
+    local grabber = CreateFrame("Frame", nil, previewBar)
+    grabber:SetSize(36, 4)
+    grabber:SetPoint("TOP", previewBar, "TOP", 0, -4)
+    W.Paint(grabber, C.edge, 2)
     local toggle = W.NavButton(previewBar, L["Hide preview"], "ChevronDown", 140, 30, function()
         NS.db.showPreview = not NS.db.showPreview
         frame.previewPane:UpdateLayout()
@@ -244,14 +268,91 @@ local function Build()
     local pane = NS.CreatePreviewPane(content, previewBar)
     frame.previewPane = pane
 
+    local function ContentHeight()
+        local height = content:GetHeight()
+        if not height or height <= 0 then
+            -- Not laid out yet (the first frame after the window opens): work it out from the window.
+            height = (frame:GetHeight() or WINDOW_HEIGHT) - HEADER_HEIGHT - 2
+        end
+        return height
+    end
+
+    -- Height of the stage: the dragged height, or a share of the window; always within what the
+    -- window has room for.
+    function pane:StageHeight()
+        local available = ContentHeight()
+        local tallest = math.max(STAGE_MIN, available - PAGE_TOP - BAR_HEIGHT - PAGE_MIN)
+        local height = NS.db.previewHeight
+            or math.max(STAGE_AUTO_MIN, math.min(STAGE_AUTO_MAX, available * STAGE_FRACTION))
+        return math.floor(math.max(STAGE_MIN, math.min(tallest, height)) + 0.5)
+    end
+
+    -- Put the strip (and with it the page above and the stage below, which are anchored to it)
+    -- at the stage height. Cheap, so it also runs while the window or the strip is dragged.
+    function pane:ApplyHeight()
+        local offset = NS.db.showPreview ~= false and self:StageHeight() or 0
+        if previewBar.stageOffset == offset then return end
+        previewBar.stageOffset = offset
+        previewBar:ClearAllPoints()
+        previewBar:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 0, offset)
+        previewBar:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", 0, offset)
+    end
+
+    local function StopDrag()
+        if not previewBar.dragging then return end
+        previewBar.dragging = nil
+        previewBar:SetScript("OnUpdate", nil)
+        W.Paint(grabber, C.edge, 2)
+        -- Keep what the player ended up with (the drag may have gone past a limit).
+        if NS.db.previewHeight then NS.db.previewHeight = pane:StageHeight() end
+    end
+    previewBar:SetScript("OnMouseDown", function(self, button)
+        if button ~= "LeftButton" or NS.db.showPreview == false then return end
+        local _, cursor = GetCursorPosition()
+        local startCursor, startHeight = cursor / self:GetEffectiveScale(), pane:StageHeight()
+        local moving = false
+        self.dragging = true
+        W.Paint(grabber, GOLD, 2)
+        self:SetScript("OnUpdate", function(bar)
+            if IsMouseButtonDown and not IsMouseButtonDown("LeftButton") then StopDrag() return end
+            local _, now = GetCursorPosition()
+            local moved = now / bar:GetEffectiveScale() - startCursor   -- up is positive
+            -- A click or double-click must not nudge the height: wait for a real drag.
+            if not moving then
+                if math.abs(moved) < DRAG_DEAD_ZONE then return end
+                moving = true
+            end
+            NS.db.previewHeight = startHeight + moved
+            pane:ApplyHeight()
+            pane:Poke()
+        end)
+    end)
+    previewBar:SetScript("OnMouseUp", StopDrag)
+    previewBar:SetScript("OnHide", StopDrag)
+    previewBar:SetScript("OnDoubleClick", function()
+        previewBar.dragging = nil
+        previewBar:SetScript("OnUpdate", nil)
+        W.Paint(grabber, C.edge, 2)
+        NS.db.previewHeight = nil
+        pane:ApplyHeight()
+        pane:Poke()
+    end)
+    previewBar:SetScript("OnEnter", function() if not previewBar.dragging then W.Paint(grabber, C.radio, 2) end end)
+    previewBar:SetScript("OnLeave", function() if not previewBar.dragging then W.Paint(grabber, C.edge, 2) end end)
+    -- After the scripts above: a hook added with W.Tooltip must come last.
+    W.Tooltip(previewBar, L["Drag to change the preview height. Double-click to reset it."])
+
+    -- The stage follows the window's height.
+    content:SetScript("OnSizeChanged", function() pane:ApplyHeight() end)
+
     function pane:UpdateLayout()
         local open = NS.db.showPreview ~= false
         self:SetShown(open)
         replay:SetShown(open)
         note:SetShown(open)
-        previewBar:ClearAllPoints()
-        previewBar:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 0, open and STAGE_HEIGHT or 0)
-        previewBar:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", 0, open and STAGE_HEIGHT or 0)
+        grabber:SetShown(open)
+        previewBar.stageOffset = nil   -- anchor again even if the height is unchanged
+        self:ApplyHeight()
         W.Paint(previewBar, C.drawer, 9, nil, open and "1234" or "124")
         frame.pageArea:ClearAllPoints()
         frame.pageArea:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -PAGE_TOP)
@@ -412,6 +513,7 @@ local function Build()
                 C_Timer.After(delay, function()
                     if self:IsShown() and self.openCount == opened then
                         W.RefreshAllText()
+                        pane:ApplyHeight()
                         pane:LayoutColumns()
                         self:Refresh()
                     end

@@ -13,7 +13,7 @@ customisation (fonts, colors, icons) can be added.
 
 | Page | Section | Control | CVar | Wiki default |
 | --- | --- | --- | --- | --- |
-| General | Number Style | Style (Retail / Classic) | `classicStyleWorldText` | 0 |
+| General | Number Style | Style (Retail / Classic, two cards) | `classicStyleWorldText` | 0 |
 | General | Number Style | Size | `WorldTextScale_v2` | 1 |
 | General | Your Combat Text | Your scrolling text (on / off) | `enableFloatingCombatText` | 0 |
 | General | Your Combat Text | Float mode (Up / Down / Arc) | `floatingCombatTextFloatMode_v2` | 1 |
@@ -41,6 +41,9 @@ customisation (fonts, colors, icons) can be added.
 Defaults come from the Warcraft wiki Classic CVar list. "Reset Defaults" (or `/fcs reset`) writes them back.
 That includes "Your scrolling text", whose wiki default is off.
 
+- The number style is two large cards side by side instead of a small toggle. Retail is a smooth reveal (numbers
+  ease in and settle gradually); Classic is instant and direct. A note under the cards explains that both styles are
+  fully tweakable: Size and every Appearance slider apply to whichever style is chosen.
 - Sliders write the CVar as you drag. Click a value to type an exact number; typed values may go past the slider range.
 - Hover a setting for its CVar name.
 - "Re-apply at login" puts your values back if the client resets them.
@@ -48,6 +51,9 @@ That includes "Your scrolling text", whose wiki default is off.
 - "Reload UI" is in the sidebar in case a change does not show up in game.
 - Drag the window's bottom-right corner to resize it (720x560 up to the screen size); double-click the corner to
   restore the default size. The size is saved, and the window scales down on small screens.
+- The preview stage grows with the window's height (about a third of it, 230-440 px). To set it yourself, drag the
+  strip above the stage (the one with Hide preview and Replay) up or down; double-click the strip to go back to
+  automatic. The dragged height is saved, and always leaves the settings page at least 170 px.
 - `/fcs debug` prints how a few labels are being drawn (for diagnosing blank text).
 
 ## About the preview
@@ -56,6 +62,11 @@ The wiki lists these CVars but gives no formulas, so the preview is an approxima
 them. The motion constants are all in the `PHYS` table at the top of `Preview.lua`; adjust them if the preview
 and a real target disagree. The float mode only affects the "Taken" column. Directional numbers alternate sides
 in the preview, since the real direction depends on where you stand.
+
+Timing: with the default Gravity (0.5), numbers over a target fade out before they start to fall, as they do in game,
+so a Retail number is gone about 1.1 s after it appears, just before the top of its arc. Higher Gravity still shows
+them dropping. `PHYS.LIFETIME` and `PHYS.FADE_START` set this; your own scrolling text (Taken) has its own
+`PLAYER_LIFETIME` and `PLAYER_FADE_START`.
 
 The preview columns follow the switches: a column whose setting is off (Hit and Crit with "Damage over targets",
 Heal with "Healing you do", Taken with "Your scrolling text") shows "Off".
@@ -92,7 +103,7 @@ button that shows the GitHub Issues URL to copy. Terms shared with PlateSCT reus
 
 - `Core.lua`: CVar list, reading/writing, saved variables, slash commands
 - `Locales/`: the language registry and one file per language (see above)
-- `Widgets.lua`: palette, rounded shapes, buttons, sliders, switches, dropdown, rows (ported from the PlateSCT settings)
+- `Widgets.lua`: palette, rounded shapes, buttons, sliders, switches, dropdown, style cards, rows (ported from the PlateSCT settings)
 - `Preview.lua`: the preview drawer and number animation
 - `Window.lua`: the window
 - `Media/`: rounded-corner texture, icons and Source Sans 3 fonts (SIL OFL, see `Media/Fonts/SourceSans3-OFL.md`), copied from PlateSCT

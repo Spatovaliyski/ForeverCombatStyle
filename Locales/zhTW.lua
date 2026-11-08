@@ -90,6 +90,16 @@ L["Not available on this client."] = "此用戶端不可用。"
 L["This setting is not available on this client."] = "此設定在此用戶端上不可用。"
 L["Click to type an exact value."] = "點擊輸入精確數值。"
 
+-- Number style
+L["Smooth reveal"] = "平滑顯現"
+L["Instant and direct"] = "即時直接"
+L["Numbers ease into view and settle into place gradually, for a softer, more fluid feel."] =
+    "數字會漸漸顯現並逐步穩定到最終大小，觀感更柔和、更流暢。"
+L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."] =
+    "數字會立即出現並直線移動，沒有逐漸放大的過程，觀感更俐落。"
+L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."] =
+    "兩種樣式都可以自由調整：大小以及%s頁面上的所有滑桿（包括彈出與淡出漸變）適用於你所選的樣式。下方預覽會顯示效果。"
+
 -- Behaviour
 L["Re-apply at login"] = "登入時重新套用"
 L["Put your settings back at login if the client reset them."] = "若用戶端重置了設定，登入時會還原你的設定。"
@@ -120,6 +130,7 @@ L["Crit"] = "致命一擊"
 L["Heal"] = "治療"
 L["Taken"] = "承受"
 L["Off"] = "關閉"
+L["Drag to change the preview height. Double-click to reset it."] = "拖曳以調整預覽高度。按兩下重設。"
 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "所有戰鬥文字 CVar 已還原為 WoW Forever 預設值。"

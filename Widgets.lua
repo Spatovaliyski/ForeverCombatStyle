@@ -1007,6 +1007,122 @@ function W.NewLayout(parent, root, opts)
         return control
     end
 
+    -- A two-way choice shown as large cards side by side, so the difference between the options
+    -- reads at a glance (used for the number style). Each card has a radio dot, the option name, a
+    -- short tagline and a few lines on how it behaves. `details` maps an option value to
+    -- { tagline =, text = } (already translated).
+    local CARD_PAD, CARD_GAP, CARD_DOT, CARD_HEAD_GAP = 16, 12, 18, 10
+    function layout:StyleCards(setting, details)
+        local row = CreateFrame("Frame", nil, parent)
+        row:SetSize(self.width, 120)
+        local control = CreateFrame("Frame", nil, row)
+        control:SetAllPoints(row)
+        control.layoutType = "cards"
+        control.row, control.setting, control.cards = row, setting, {}
+        row.layoutControl = control
+        root.controls[#root.controls + 1] = control
+
+        local function CardTip()
+            local note = (not NS.available[setting.cvar]) and L["Not available on this client."] or nil
+            return { title = L[setting.label], body = note or L[setting.tip], foot = setting.cvar }
+        end
+
+        local function PaintCard(card)
+            local enabled = not card.IsEnabled or card:IsEnabled()
+            local selected = card.optionsSelected
+            local over = enabled and card.IsMouseOver and card:IsMouseOver()
+            local fill = selected and C.cardSelected or over and C.cardHover or C.card
+            local ring = selected and (enabled and C.accent or C.switchOnDisabled) or C.edge
+            W.Paint(card, fill, 10, ring)
+            -- Radio dot: a ring when off, a filled gold disc with a tick when on.
+            card.dot:SetVertexColor(RGB(selected and (enabled and C.accent or C.switchOnDisabled) or C.radio))
+            card.dotInner:SetVertexColor(RGB(fill))
+            card.dotInner:SetShown(not selected)
+            card.check:SetShown(selected and true or false)
+            card.title:SetTextColor(RGB(not enabled and C.disabledText or selected and C.bright or C.text))
+            card.tagline:SetTextColor(RGB(not enabled and C.disabledText or selected and C.accent or C.muted))
+            card.body:SetTextColor(RGB(not enabled and C.disabledText or selected and C.navText or C.muted))
+        end
+
+        for _, option in ipairs(setting.options) do
+            local detail = details and details[option[1]] or {}
+            local card = CreateFrame("Button", nil, control)
+            card.value = option[1]
+            card.dot = Circle(card, CARD_DOT, C.radio, "ARTWORK")
+            card.dotInner = Circle(card, CARD_DOT - 4, C.card, "ARTWORK", 1)
+            card.check = W.Icon(card, "Check", 12, C.onAccent, "OVERLAY")
+            card.dot:SetPoint("TOPLEFT", card, "TOPLEFT", CARD_PAD, -CARD_PAD)
+            card.dotInner:SetPoint("CENTER", card.dot, "CENTER", 0, 0)
+            card.check:SetPoint("CENTER", card.dot, "CENTER", 0, 0)
+            card.title = W.Text(card, L[option[2]], 0, 0, nil, C.text, "semibold", 15)
+            card.title:SetWordWrap(false)
+            card.tagline = W.Text(card, detail.tagline or "", 0, 0, nil, C.muted, "medium", 14)
+            card.body = W.SetSmall(W.Text(card, detail.text or "", 0, 0, nil, C.muted))
+            card:SetScript("OnClick", function()
+                if NS.available[setting.cvar] then
+                    NS.Set(setting.cvar, card.value)
+                    control:Refresh()
+                end
+            end)
+            Hook(card, "OnEnter", PaintCard)
+            Hook(card, "OnLeave", PaintCard)
+            W.Tooltip(card, CardTip)
+            control.cards[#control.cards + 1] = card
+        end
+
+        -- Place the cards across `width`; returns the height they need (the tallest card, so
+        -- both stay the same height whatever the language).
+        function control:Fit(width)
+            local count = #self.cards
+            local each = math.floor((width - CARD_GAP * (count - 1)) / count)
+            local headX = CARD_PAD + CARD_DOT + CARD_HEAD_GAP
+            local headWidth = math.max(40, each - headX - CARD_PAD)
+            local bodyWidth = math.max(40, each - CARD_PAD * 2)
+            local headHeight, bodyHeight = 0, 0
+            for _, card in ipairs(self.cards) do
+                card.title:SetWidth(headWidth)
+                card.tagline:SetWidth(headWidth)
+                card.body:SetWidth(bodyWidth)
+                local titleHeight = math.max(18, card.title:GetStringHeight())
+                card.titleHeight = titleHeight
+                headHeight = math.max(headHeight, titleHeight + 2 + math.max(16, card.tagline:GetStringHeight()))
+                bodyHeight = math.max(bodyHeight, math.max(16, card.body:GetStringHeight()))
+            end
+            local height = CARD_PAD + headHeight + 10 + bodyHeight + CARD_PAD
+            for index, card in ipairs(self.cards) do
+                card:ClearAllPoints()
+                card:SetPoint("TOPLEFT", self, "TOPLEFT", (index - 1) * (each + CARD_GAP), 0)
+                card:SetSize(each, height)
+                card.title:ClearAllPoints()
+                card.title:SetPoint("TOPLEFT", card, "TOPLEFT", headX, -CARD_PAD)
+                card.tagline:ClearAllPoints()
+                card.tagline:SetPoint("TOPLEFT", card, "TOPLEFT", headX, -(CARD_PAD + card.titleHeight + 2))
+                card.body:ClearAllPoints()
+                card.body:SetPoint("TOPLEFT", card, "TOPLEFT", CARD_PAD, -(CARD_PAD + headHeight + 10))
+                -- Center the dot on the title line.
+                card.dot:ClearAllPoints()
+                card.dot:SetPoint("TOPLEFT", card, "TOPLEFT", CARD_PAD, -(CARD_PAD + (card.titleHeight - CARD_DOT) / 2))
+            end
+            return height
+        end
+
+        function control:Refresh()
+            local current = NS.values[setting.cvar] or setting.default
+            local available = NS.available[setting.cvar] and true or false
+            for _, card in ipairs(self.cards) do
+                card.optionsSelected = math.abs(card.value - current) < 0.01
+                SetControlEnabled(card, available)
+                PaintCard(card)
+            end
+        end
+
+        self:AddRow(row, control.cards[1].title, "cards")
+        row.layoutGap = 12
+        control:Fit(self.width)
+        control:Refresh()
+        return control
+    end
+
     function layout:Switch(label, tip, get, set)
         local row = self:NewRow(label, tip)
         local control = W.Switch(row)
@@ -1148,6 +1264,8 @@ function W.NewLayout(parent, root, opts)
             elseif row.layoutKind == "note" then
                 caption:SetWidth(self.width)
                 height = math.max(16, caption:GetStringHeight()) + 12
+            elseif row.layoutKind == "cards" then
+                height = row.layoutControl:Fit(self.width) + 8
             else
                 height = PlaceControlRow(row, self.width)
             end

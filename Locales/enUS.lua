@@ -90,6 +90,16 @@ L["Not available on this client."] = "Not available on this client."
 L["This setting is not available on this client."] = "This setting is not available on this client."
 L["Click to type an exact value."] = "Click to type an exact value."
 
+-- Number style
+L["Smooth reveal"] = "Smooth reveal"
+L["Instant and direct"] = "Instant and direct"
+L["Numbers ease into view and settle into place gradually, for a softer, more fluid feel."] =
+    "Numbers ease into view and settle into place gradually, for a softer, more fluid feel."
+L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."] =
+    "Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."
+L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."] =
+    "Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."
+
 -- Behaviour
 L["Re-apply at login"] = "Re-apply at login"
 L["Put your settings back at login if the client reset them."] = "Put your settings back at login if the client reset them."
@@ -120,6 +130,8 @@ L["Crit"] = "Crit"
 L["Heal"] = "Heal"
 L["Taken"] = "Taken"
 L["Off"] = "Off"
+L["Drag to change the preview height. Double-click to reset it."] =
+    "Drag to change the preview height. Double-click to reset it."
 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "all combat text CVars set back to the WoW Forever defaults."

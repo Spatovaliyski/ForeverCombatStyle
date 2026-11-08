@@ -90,6 +90,16 @@ L["Not available on this client."] = "Auf diesem Client nicht verfügbar."
 L["This setting is not available on this client."] = "Diese Einstellung ist auf diesem Client nicht verfügbar."
 L["Click to type an exact value."] = "Klicken, um einen genauen Wert einzugeben."
 
+-- Number style
+L["Smooth reveal"] = "Sanftes Einblenden"
+L["Instant and direct"] = "Sofort und direkt"
+L["Numbers ease into view and settle into place gradually, for a softer, more fluid feel."] =
+    "Zahlen blenden sanft ein und pendeln sich allmählich auf ihre Größe ein – für ein weicheres, flüssigeres Gefühl."
+L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."] =
+    "Zahlen erscheinen sofort und bewegen sich geradlinig, ohne allmählichen Aufbau – für ein direkteres Gefühl."
+L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."] =
+    "Beide Stile sind vollständig anpassbar: Größe und alle Regler auf der Seite %s (einschließlich der Rampe Aufpoppen und Ausblenden) gelten für den Stil, den du wählst. Die Vorschau unten zeigt das Ergebnis."
+
 -- Behaviour
 L["Re-apply at login"] = "Beim Login erneut anwenden"
 L["Put your settings back at login if the client reset them."] = "Stellt deine Einstellungen beim Login wieder her, falls der Client sie zurückgesetzt hat."
@@ -120,6 +130,8 @@ L["Crit"] = "Kritisch"
 L["Heal"] = "Heilung"
 L["Taken"] = "Erlitten"
 L["Off"] = "Aus"
+L["Drag to change the preview height. Double-click to reset it."] =
+    "Ziehen, um die Höhe der Vorschau zu ändern. Doppelklick setzt sie zurück."
 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "Alle Kampftext-CVars wurden auf die Standardwerte von WoW Forever zurückgesetzt."

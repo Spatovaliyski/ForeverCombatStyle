@@ -11,8 +11,16 @@ local floor, random = math.floor, math.random
 
 local PHYS = {
     SPEED = 1.25,           -- the whole preview (motion, fades, spawn rate) plays at this speed
-    LIFETIME = 1.9,         -- seconds a number stays on screen (at normal speed)
-    FADE_START = 0.55,      -- fraction of LIFETIME before the fade begins
+    -- Hits, crits and heals over a target. In game they are gone before they start to fall: at the
+    -- default Gravity (0.5) a Retail number peaks after RISE_RETAIL / (0.5 * GRAVITY_PX) = 1.16 s,
+    -- so it has faded out by then and never visibly drops. Keep LIFETIME at or below that peak, and
+    -- lower FADE_START to fade earlier. (Classic peaks sooner, at 0.74 s, so it still shows a small
+    -- tail at the very end of its fade.)
+    LIFETIME = 1.1,         -- seconds a number stays on screen (at normal speed)
+    FADE_START = 0.45,      -- fraction of LIFETIME before the fade begins
+    -- Your own scrolling text (the Taken column) keeps the longer timing.
+    PLAYER_LIFETIME = 1.9,
+    PLAYER_FADE_START = 0.55,
     RAMP_DURATION = 1.0,    -- seconds of the size ramp (WorldTextRampDuration_v2 default)
     RAMP_POW = 1.9,         -- ease power for hits (WorldTextRampPow_v2 default)
     RAMP_POW_CRIT = 8,      -- ease power for crits (WorldTextRampPowCrit_v2 default)
@@ -118,7 +126,7 @@ end
 local function Animate(column, entry, dt)
     entry.t = entry.t + dt
     local t = entry.t
-    if t >= PHYS.LIFETIME then
+    if t >= entry.life then
         entry:Hide()
         return
     end
@@ -142,9 +150,9 @@ local function Animate(column, entry, dt)
     end
 
     local alpha = 1
-    local fadeStart = PHYS.FADE_START * PHYS.LIFETIME
+    local fadeStart = entry.fadeStart * entry.life
     if t > fadeStart then
-        alpha = 1 - (t - fadeStart) / (PHYS.LIFETIME - fadeStart)
+        alpha = 1 - (t - fadeStart) / (entry.life - fadeStart)
     end
 
     local frameScale = entry.size / FONT_SIZE * scale * PHYS.PREVIEW_SCALE
@@ -183,6 +191,8 @@ local function Spawn(column)
     entry.t = 0
     entry.crit = def.crit and true or false
     entry.player = def.player and true or false
+    entry.life = entry.player and PHYS.PLAYER_LIFETIME or PHYS.LIFETIME
+    entry.fadeStart = entry.player and PHYS.PLAYER_FADE_START or PHYS.FADE_START
     entry.text:SetText(tostring(floor(RandRange(def.min, def.max))))
     entry.text:SetTextColor(def.color[1], def.color[2], def.color[3])
     SetNumberFont(entry.text, def.crit and "THICKOUTLINE" or "OUTLINE")
@@ -218,7 +228,7 @@ local function Spawn(column)
         entry.gravity = (v.WorldTextGravity_v2 or 0) * PHYS.GRAVITY_PX
         -- Center the visible part of the arc in the column, so rising, falling and the style are
         -- all in view. The height settings (y0) then move the numbers away from the center.
-        local low, high = PathExtent(entry.vy0, entry.gravity, PHYS.LIFETIME * PHYS.VISIBLE_FRACTION)
+        local low, high = PathExtent(entry.vy0, entry.gravity, entry.life * PHYS.VISIBLE_FRACTION)
         entry.originY = height / 2 - (low + high) / 2 * PHYS.PREVIEW_SCALE
         entry.originY = math.max(height * PHYS.ORIGIN_MIN, math.min(height * PHYS.ORIGIN_MAX, entry.originY))
     end
