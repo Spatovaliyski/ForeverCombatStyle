@@ -1,6 +1,5 @@
 -- Forever Combat Style: the settings window, laid out like the PlateSCT settings: a header, a
--- page sidebar on the left (General, Appearance), a scrolling page with a title, and a preview
--- drawer along the bottom.
+-- page sidebar on the left (General, Combat, Appearance) and a scrolling page with a title.
 local ADDON_NAME, NS = ...
 local W = NS.W
 local C = W.COLORS
@@ -9,15 +8,7 @@ local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 local WINDOW_WIDTH, WINDOW_HEIGHT = 840, 780   -- default size
 local MIN_WIDTH, MIN_HEIGHT = 720, 560           -- smallest size the grip allows
 local SIDEBAR_WIDTH, HEADER_HEIGHT = 200, 64
-local BAR_HEIGHT = 44
 local PAGE_TOP = 92
--- The preview stage (the dark area with the sample numbers). Unless the player has dragged it, its
--- height follows the window: STAGE_FRACTION of the content height, kept between the AUTO limits.
--- A dragged height is saved in NS.db.previewHeight, between STAGE_MIN and what leaves the settings
--- page PAGE_MIN of height.
-local STAGE_MIN, STAGE_AUTO_MIN, STAGE_AUTO_MAX, STAGE_FRACTION = 150, 230, 440, 0.36
-local PAGE_MIN = 170
-local DRAG_DEAD_ZONE = 2   -- px the cursor must move before a drag changes the height
 local NAV_TOP, NAV_STEP, NAV_HEIGHT = 24, 38, 36
 local UTILITY_STEP, UTILITY_HEIGHT = 32, 30
 local GOLD = C.accent
@@ -73,7 +64,7 @@ local function BuildPages()
                     },
                 })
                 layout:Note(string.format(
-                    L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."],
+                    L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose."],
                     L["Appearance"]))
                 layout:Slider(S("WorldTextScale_v2"))
                 layout:Heading(L["Your Combat Text"])
@@ -84,6 +75,13 @@ local function BuildPages()
                     L["Put your settings back at login if the client reset them."],
                     function() return NS.db.reapply end,
                     function(value) NS.db.reapply = value end)
+                layout:Switch(L["See through while adjusting"],
+                    L["Fade this window while you change a setting, so you can watch the real numbers on a target."],
+                    function() return NS.db.liveMode ~= false end,
+                    function(value)
+                        NS.db.liveMode = value
+                        if not value and NS.LiveStop then NS.LiveStop() end
+                    end)
                 layout:Heading(L["Language"])
                 local choices = {}
                 for _, option in ipairs(NS.LOCALE_OPTIONS) do
@@ -184,7 +182,7 @@ local function Build()
     titleBar:SetPoint("TOPRIGHT", -1, -1)
     titleBar:SetHeight(HEADER_HEIGHT)
     titleBar:EnableMouse(true)
-    -- Same surface as the preview drawer; square bottom corners, rounded top to match the window.
+    -- The darkest surface; square bottom corners, rounded top to match the window.
     W.Paint(titleBar, C.drawer, 9, nil, "34")
     -- Move from mouse down/up: dragging a child shifts the parent cursor offset.
     titleBar:SetScript("OnMouseDown", function(_, button) if button == "LeftButton" then frame:StartMoving(true) end end)
@@ -225,7 +223,7 @@ local function Build()
     divider:SetHeight(1)
     divider:SetPoint("BOTTOMLEFT", 16, 110); divider:SetPoint("BOTTOMRIGHT", -16, 110)
 
-    -- Content: page title, subtitle, scrolling page, and the preview drawer.
+    -- Content: page title, subtitle and the scrolling page.
     local content = CreateFrame("Frame", nil, frame)
     content:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 0, 0)
     content:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -237,131 +235,12 @@ local function Build()
     frame.pageArea = CreateFrame("Frame", nil, content)
     frame.pageArea:SetClipsChildren(true)
 
-    -- The strip above the stage is also its drag handle: pull it up for a taller preview.
-    local previewBar = CreateFrame("Button", nil, content)
-    previewBar:SetHeight(BAR_HEIGHT)
-    local barLine = W.Line(previewBar, C.line)
-    barLine:SetHeight(1)
-    barLine:SetPoint("TOPLEFT"); barLine:SetPoint("TOPRIGHT")
-    local grabber = CreateFrame("Frame", nil, previewBar)
-    grabber:SetSize(36, 4)
-    grabber:SetPoint("TOP", previewBar, "TOP", 0, -4)
-    W.Paint(grabber, C.edge, 2)
-    local toggle = W.NavButton(previewBar, L["Hide preview"], "ChevronDown", 140, 30, function()
-        NS.db.showPreview = not NS.db.showPreview
-        frame.previewPane:UpdateLayout()
-    end, "ghost")
-    toggle:SetPoint("LEFT", 12, 0)
-    W.Tooltip(toggle, L["Show sample hits, crits and incoming damage inside this window."])
-    local replay = W.Button(previewBar, L["Replay"], 100, 30, function()
-        frame.previewPane:Poke()
-    end, "flat")
-    replay:SetPoint("RIGHT", -16, 0)
-    frame.replay = replay   -- kept so /fcs debug can inspect its label
-    W.Tooltip(replay, L["Restart the sample numbers."])
-    local note = W.Text(previewBar, L["Approximate preview  ·  check on a real target"], 0, 0, nil, C.dim)
-    note:ClearAllPoints()
-    note:SetPoint("RIGHT", replay, "LEFT", -16, 0)
-    note:SetJustifyH("RIGHT")
-    note:SetWordWrap(false)
-
-    local pane = NS.CreatePreviewPane(content, previewBar)
-    frame.previewPane = pane
-
-    local function ContentHeight()
-        local height = content:GetHeight()
-        if not height or height <= 0 then
-            -- Not laid out yet (the first frame after the window opens): work it out from the window.
-            height = (frame:GetHeight() or WINDOW_HEIGHT) - HEADER_HEIGHT - 2
-        end
-        return height
-    end
-
-    -- Height of the stage: the dragged height, or a share of the window; always within what the
-    -- window has room for.
-    function pane:StageHeight()
-        local available = ContentHeight()
-        local tallest = math.max(STAGE_MIN, available - PAGE_TOP - BAR_HEIGHT - PAGE_MIN)
-        local height = NS.db.previewHeight
-            or math.max(STAGE_AUTO_MIN, math.min(STAGE_AUTO_MAX, available * STAGE_FRACTION))
-        return math.floor(math.max(STAGE_MIN, math.min(tallest, height)) + 0.5)
-    end
-
-    -- Put the strip (and with it the page above and the stage below, which are anchored to it)
-    -- at the stage height. Cheap, so it also runs while the window or the strip is dragged.
-    function pane:ApplyHeight()
-        local offset = NS.db.showPreview ~= false and self:StageHeight() or 0
-        if previewBar.stageOffset == offset then return end
-        previewBar.stageOffset = offset
-        previewBar:ClearAllPoints()
-        previewBar:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 0, offset)
-        previewBar:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", 0, offset)
-    end
-
-    local function StopDrag()
-        if not previewBar.dragging then return end
-        previewBar.dragging = nil
-        previewBar:SetScript("OnUpdate", nil)
-        W.Paint(grabber, C.edge, 2)
-        -- Keep what the player ended up with (the drag may have gone past a limit).
-        if NS.db.previewHeight then NS.db.previewHeight = pane:StageHeight() end
-    end
-    previewBar:SetScript("OnMouseDown", function(self, button)
-        if button ~= "LeftButton" or NS.db.showPreview == false then return end
-        local _, cursor = GetCursorPosition()
-        local startCursor, startHeight = cursor / self:GetEffectiveScale(), pane:StageHeight()
-        local moving = false
-        self.dragging = true
-        W.Paint(grabber, GOLD, 2)
-        self:SetScript("OnUpdate", function(bar)
-            if IsMouseButtonDown and not IsMouseButtonDown("LeftButton") then StopDrag() return end
-            local _, now = GetCursorPosition()
-            local moved = now / bar:GetEffectiveScale() - startCursor   -- up is positive
-            -- A click or double-click must not nudge the height: wait for a real drag.
-            if not moving then
-                if math.abs(moved) < DRAG_DEAD_ZONE then return end
-                moving = true
-            end
-            NS.db.previewHeight = startHeight + moved
-            pane:ApplyHeight()
-            pane:Poke()
-        end)
-    end)
-    previewBar:SetScript("OnMouseUp", StopDrag)
-    previewBar:SetScript("OnHide", StopDrag)
-    previewBar:SetScript("OnDoubleClick", function()
-        previewBar.dragging = nil
-        previewBar:SetScript("OnUpdate", nil)
-        W.Paint(grabber, C.edge, 2)
-        NS.db.previewHeight = nil
-        pane:ApplyHeight()
-        pane:Poke()
-    end)
-    previewBar:SetScript("OnEnter", function() if not previewBar.dragging then W.Paint(grabber, C.radio, 2) end end)
-    previewBar:SetScript("OnLeave", function() if not previewBar.dragging then W.Paint(grabber, C.edge, 2) end end)
-    -- After the scripts above: a hook added with W.Tooltip must come last.
-    W.Tooltip(previewBar, L["Drag to change the preview height. Double-click to reset it."])
-
-    -- The stage follows the window's height.
-    content:SetScript("OnSizeChanged", function() pane:ApplyHeight() end)
-
-    function pane:UpdateLayout()
-        local open = NS.db.showPreview ~= false
-        self:SetShown(open)
-        replay:SetShown(open)
-        note:SetShown(open)
-        grabber:SetShown(open)
-        previewBar.stageOffset = nil   -- anchor again even if the height is unchanged
-        self:ApplyHeight()
-        W.Paint(previewBar, C.drawer, 9, nil, open and "1234" or "124")
-        frame.pageArea:ClearAllPoints()
-        frame.pageArea:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -PAGE_TOP)
-        frame.pageArea:SetPoint("BOTTOMRIGHT", previewBar, "TOPRIGHT", 0, 0)
-        W.RefreshText(toggle:GetFontString())
-        toggle:SetText(open and L["Hide preview"] or L["Show preview"])
-        W.SetIcon(toggle.optionsIcon, open and "ChevronDown" or "ChevronUp")
-        toggle:SetWidth(toggle:GetFontString():GetStringWidth() + 50)
-        for _, entry in pairs(frame.pages) do entry.view:UpdateScroll() end
+    -- The scrolling page fills the content below the title and subtitle.
+    function frame:LayoutPages()
+        self.pageArea:ClearAllPoints()
+        self.pageArea:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -PAGE_TOP)
+        self.pageArea:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", 0, 0)
+        for _, entry in pairs(self.pages) do entry.view:UpdateScroll() end
     end
 
     function frame:Refresh()
@@ -500,11 +379,9 @@ local function Build()
         -- opens. On the first open after a fresh game start the client can take longer than a
         -- moment to load the fonts (a /reload keeps them loaded, which hides the problem).
         W.RefreshAllText()
-        pane:UpdateLayout()
-        pane:LayoutColumns()
+        self:LayoutPages()
         self:Refresh()
         self:SelectPage(session.page)
-        pane:Poke()
         if C_Timer and C_Timer.After then
             -- A pass from an earlier open must not run after the window was closed and reopened.
             self.openCount = (self.openCount or 0) + 1
@@ -513,8 +390,6 @@ local function Build()
                 C_Timer.After(delay, function()
                     if self:IsShown() and self.openCount == opened then
                         W.RefreshAllText()
-                        pane:ApplyHeight()
-                        pane:LayoutColumns()
                         self:Refresh()
                     end
                 end)
@@ -527,13 +402,6 @@ local function Build()
     end
     return frame
 end
-
--- Restart the preview whenever a CVar changes. Registered once; it follows whichever window is
--- current, since the window is rebuilt when the language changes.
-NS.OnChange(function()
-    local frame = NS.frame
-    if frame and frame.previewPane then frame.previewPane:Poke() end
-end)
 
 function NS.Toggle()
     if not NS.frame then
@@ -620,11 +488,5 @@ function NS.Debug()
         Describe("warning text", warning)
         Describe("row caption (draws)", sample and sample.layoutCaption)
         Describe("row description", sample and sample.layoutDescription)
-    end
-    local replay = NS.frame.replay
-    if replay then
-        NS.Print(string.format("Replay button: shown=%s enabled=%s width=%.0f height=%.0f",
-            tostring(replay:IsShown()), tostring(replay:IsEnabled()), replay:GetWidth() or 0, replay:GetHeight() or 0))
-        Describe("Replay label", replay:GetFontString())
     end
 end

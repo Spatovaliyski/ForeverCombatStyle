@@ -85,7 +85,7 @@ L["Show your pet's spell damage."] = "Mostra i danni da incantesimo del tuo fami
 L["How long the size animation lasts, in seconds."] = "Durata dell'animazione della dimensione, in secondi."
 L["How sharply hit numbers settle to their size."] = "Quanto bruscamente i numeri dei colpi si stabilizzano alla loro dimensione."
 L["How sharply crits settle to their size."] = "Quanto bruscamente i critici si stabilizzano alla loro dimensione."
-L["Opacity floor for numbers. Not shown in the preview."] = "Soglia minima di opacità dei numeri. Non mostrata nell'anteprima."
+L["Opacity floor for numbers."] = "Soglia minima di opacità dei numeri."
 L["Not available on this client."] = "Non disponibile su questo client."
 L["This setting is not available on this client."] = "Questa impostazione non è disponibile su questo client."
 L["Click to type an exact value."] = "Fai clic per inserire un valore esatto."
@@ -97,12 +97,16 @@ L["Numbers ease into view and settle into place gradually, for a softer, more fl
     "I numeri compaiono in modo graduale e si assestano lentamente, per una resa più morbida e fluida."
 L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."] =
     "I numeri compaiono subito e si muovono in linea retta, senza una crescita graduale, per una resa più rapida."
-L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."] =
-    "Entrambi gli stili sono completamente regolabili: Dimensione e tutti i cursori della pagina %s (compresa la rampa Comparsa e dissolvenza) valgono per lo stile che scegli. L'anteprima qui sotto mostra il risultato."
+L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose."] =
+    "Entrambi gli stili sono completamente regolabili: Dimensione e tutti i cursori della pagina %s (compresa la rampa Comparsa e dissolvenza) valgono per lo stile che scegli."
 
 -- Behaviour
 L["Re-apply at login"] = "Riapplica all'accesso"
 L["Put your settings back at login if the client reset them."] = "Ripristina le tue impostazioni all'accesso se il client le ha reimpostate."
+L["See through while adjusting"] = "Trasparente durante la regolazione"
+L["Fade this window while you change a setting, so you can watch the real numbers on a target."] = "Rende questa finestra trasparente mentre modifichi un'impostazione, per vedere i numeri reali su un bersaglio."
+L["On"] = "Attivo"
+L["Off"] = "Disattivato"
 
 -- Language
 L["Auto"] = "Auto"
@@ -117,21 +121,6 @@ L["Reload UI"] = "Ricarica UI"
 L["Reload the interface. Use it if a change does not show up in game."] = "Ricarica l'interfaccia. Usalo se una modifica non compare in gioco."
 L["Reset Defaults"] = "Ripristina"
 L["Put every combat text setting back to the WoW Forever default."] = "Riporta tutte le impostazioni del testo di combattimento ai valori predefiniti di WoW Forever."
-
--- Preview
-L["Hide preview"] = "Nascondi anteprima"
-L["Show preview"] = "Mostra anteprima"
-L["Show sample hits, crits and incoming damage inside this window."] = "Mostra in questa finestra colpi, critici e danni subiti di esempio."
-L["Replay"] = "Ripeti"
-L["Restart the sample numbers."] = "Riavvia i numeri di esempio."
-L["Approximate preview  ·  check on a real target"] = "Anteprima approssimativa  ·  verifica su un bersaglio reale"
-L["Hit"] = "Colpo"
-L["Crit"] = "Critico"
-L["Heal"] = "Cura"
-L["Taken"] = "Subiti"
-L["Off"] = "Disattivato"
-L["Drag to change the preview height. Double-click to reset it."] =
-    "Trascina per cambiare l'altezza dell'anteprima. Fai doppio clic per ripristinarla."
 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "tutti i CVar del testo di combattimento sono stati riportati ai valori predefiniti di WoW Forever."

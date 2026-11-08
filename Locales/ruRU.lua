@@ -85,7 +85,7 @@ L["Show your pet's spell damage."] = "Показывать урон заклин
 L["How long the size animation lasts, in seconds."] = "Длительность анимации размера в секундах."
 L["How sharply hit numbers settle to their size."] = "Насколько резко числа попаданий приходят к своему размеру."
 L["How sharply crits settle to their size."] = "Насколько резко числа критов приходят к своему размеру."
-L["Opacity floor for numbers. Not shown in the preview."] = "Нижний предел непрозрачности чисел. В предпросмотре не отображается."
+L["Opacity floor for numbers."] = "Нижний предел непрозрачности чисел."
 L["Not available on this client."] = "Недоступно в этом клиенте."
 L["This setting is not available on this client."] = "Эта настройка недоступна в этом клиенте."
 L["Click to type an exact value."] = "Нажмите, чтобы ввести точное значение."
@@ -97,12 +97,16 @@ L["Numbers ease into view and settle into place gradually, for a softer, more fl
     "Числа плавно проявляются и постепенно принимают нужный размер, для более мягкого и плавного ощущения."
 L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."] =
     "Числа появляются мгновенно и движутся прямо, без постепенного нарастания, для более резкого и быстрого ощущения."
-L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."] =
-    "Оба стиля полностью настраиваются: параметр «Размер» и все ползунки на странице «%s» (включая кривую «Появление и затухание») действуют для выбранного стиля. Предпросмотр ниже показывает результат."
+L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose."] =
+    "Оба стиля полностью настраиваются: параметр «Размер» и все ползунки на странице «%s» (включая кривую «Появление и затухание») действуют для выбранного стиля."
 
 -- Behaviour
 L["Re-apply at login"] = "Применять заново при входе"
 L["Put your settings back at login if the client reset them."] = "Возвращает ваши настройки при входе, если клиент их сбросил."
+L["See through while adjusting"] = "Прозрачность при настройке"
+L["Fade this window while you change a setting, so you can watch the real numbers on a target."] = "Делает это окно полупрозрачным, пока вы меняете параметр, чтобы видеть настоящие числа на цели."
+L["On"] = "Вкл."
+L["Off"] = "Выкл."
 
 -- Language
 L["Auto"] = "Авто"
@@ -117,21 +121,6 @@ L["Reload UI"] = "Перезагрузить UI"
 L["Reload the interface. Use it if a change does not show up in game."] = "Перезагружает интерфейс. Используйте, если изменение не отображается в игре."
 L["Reset Defaults"] = "Сбросить"
 L["Put every combat text setting back to the WoW Forever default."] = "Возвращает все настройки текста боя к значениям WoW Forever по умолчанию."
-
--- Preview
-L["Hide preview"] = "Скрыть предпросмотр"
-L["Show preview"] = "Показать предпросмотр"
-L["Show sample hits, crits and incoming damage inside this window."] = "Показывает в этом окне примеры попаданий, критов и входящего урона."
-L["Replay"] = "Повторить"
-L["Restart the sample numbers."] = "Перезапускает примеры чисел."
-L["Approximate preview  ·  check on a real target"] = "Приблизительный предпросмотр  ·  проверьте на настоящей цели"
-L["Hit"] = "Попадание"
-L["Crit"] = "Критическое"
-L["Heal"] = "Исцеление"
-L["Taken"] = "Получено"
-L["Off"] = "Выкл."
-L["Drag to change the preview height. Double-click to reset it."] =
-    "Перетащите, чтобы изменить высоту предпросмотра. Двойной щелчок сбрасывает её."
 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "все CVar текста боя возвращены к значениям WoW Forever по умолчанию."

@@ -85,7 +85,7 @@ L["Show your pet's spell damage."] = "显示你宠物的法术伤害。"
 L["How long the size animation lasts, in seconds."] = "大小动画持续的时间，单位为秒。"
 L["How sharply hit numbers settle to their size."] = "普通命中数字稳定到其大小的剧烈程度。"
 L["How sharply crits settle to their size."] = "暴击数字稳定到其大小的剧烈程度。"
-L["Opacity floor for numbers. Not shown in the preview."] = "数字的最低不透明度。预览中不会显示。"
+L["Opacity floor for numbers."] = "数字的最低不透明度。"
 L["Not available on this client."] = "此客户端不可用。"
 L["This setting is not available on this client."] = "此设置在此客户端上不可用。"
 L["Click to type an exact value."] = "点击输入精确数值。"
@@ -97,12 +97,16 @@ L["Numbers ease into view and settle into place gradually, for a softer, more fl
     "数字会渐渐显现并逐步稳定到最终大小，观感更柔和、更流畅。"
 L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."] =
     "数字会立即出现并直线移动，没有逐渐放大的过程，观感更干脆利落。"
-L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."] =
-    "两种样式都可以自由调整：大小以及%s页面上的所有滑块（包括弹出与淡出渐变）适用于你所选的样式。下方预览会显示效果。"
+L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose."] =
+    "两种样式都可以自由调整：大小以及%s页面上的所有滑块（包括弹出与淡出渐变）适用于你所选的样式。"
 
 -- Behaviour
 L["Re-apply at login"] = "登录时重新应用"
 L["Put your settings back at login if the client reset them."] = "如果客户端重置了设置，登录时将你的设置恢复。"
+L["See through while adjusting"] = "调整时透明"
+L["Fade this window while you change a setting, so you can watch the real numbers on a target."] = "更改设置时让此窗口变透明，方便在目标上查看真实的数字。"
+L["On"] = "开"
+L["Off"] = "关闭"
 
 -- Language
 L["Auto"] = "自动"
@@ -117,20 +121,6 @@ L["Reload UI"] = "重载界面"
 L["Reload the interface. Use it if a change does not show up in game."] = "重新加载界面。如果某项更改没有在游戏中生效，请使用此项。"
 L["Reset Defaults"] = "恢复默认设置"
 L["Put every combat text setting back to the WoW Forever default."] = "将所有战斗文字设置恢复为 WoW Forever 的默认值。"
-
--- Preview
-L["Hide preview"] = "隐藏预览"
-L["Show preview"] = "显示预览"
-L["Show sample hits, crits and incoming damage inside this window."] = "在此窗口中显示示例命中、暴击和受到的伤害。"
-L["Replay"] = "重播"
-L["Restart the sample numbers."] = "重新开始示例数字。"
-L["Approximate preview  ·  check on a real target"] = "预览仅供参考  ·  请在真实目标上确认"
-L["Hit"] = "普通命中"
-L["Crit"] = "暴击"
-L["Heal"] = "治疗"
-L["Taken"] = "承受"
-L["Off"] = "关闭"
-L["Drag to change the preview height. Double-click to reset it."] = "拖动以调整预览高度。双击重置。"
 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "所有战斗文字 CVar 已恢复为 WoW Forever 默认值。"
