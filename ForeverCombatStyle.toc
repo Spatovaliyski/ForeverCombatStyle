@@ -1,17 +1,17 @@
 ## Interface: 16001, 120100
 ## Title: Forever Combat Style
-## Notes: Tune floating damage number CVars (style, size, gravity, spread, height, direction) with a live preview. /fcs
-## Notes-frFR: Réglez les CVars des nombres de dégâts flottants (style, taille, gravité, dispersion, hauteur, direction) avec un aperçu en direct. /fcs
-## Notes-deDE: Passe die CVars der schwebenden Schadenszahlen (Stil, Größe, Schwerkraft, Streuung, Höhe, Richtung) mit Live-Vorschau an. /fcs
-## Notes-esES: Ajusta los CVars de los números de daño flotantes (estilo, tamaño, gravedad, dispersión, altura, dirección) con vista previa en vivo. /fcs
-## Notes-esMX: Ajusta los CVars de los números de daño flotantes (estilo, tamaño, gravedad, dispersión, altura, dirección) con vista previa en vivo. /fcs
-## Notes-ruRU: Настройка CVar всплывающих чисел урона (стиль, размер, гравитация, разброс, высота, направление) с предпросмотром в реальном времени. /fcs
-## Notes-itIT: Regola i CVar dei numeri di danno fluttuanti (stile, dimensione, gravità, dispersione, altezza, direzione) con anteprima dal vivo. /fcs
-## Notes-ptBR: Ajuste os CVars dos números de dano flutuantes (estilo, tamanho, gravidade, dispersão, altura, direção) com prévia ao vivo. /fcs
-## Notes-zhCN: 通过实时预览调整浮动伤害数字的 CVar（样式、大小、重力、分散度、高度、方向）。/fcs
-## Notes-zhTW: 透過即時預覽調整浮動傷害數字的 CVar（樣式、大小、重力、分散度、高度、方向）。/fcs
-## Notes-koKR: 실시간 미리 보기로 떠오르는 피해 숫자의 CVar(스타일, 크기, 중력, 분산, 높이, 방향)를 조정합니다. /fcs
-## Version: 1.0.0
+## Notes: Tune floating damage number CVars (style, size, gravity, spread, height, direction). /fcs
+## Notes-frFR: Réglez les CVars des nombres de dégâts flottants (style, taille, gravité, dispersion, hauteur, direction). /fcs
+## Notes-deDE: Passe die CVars der schwebenden Schadenszahlen (Stil, Größe, Schwerkraft, Streuung, Höhe, Richtung) an. /fcs
+## Notes-esES: Ajusta los CVars de los números de daño flotantes (estilo, tamaño, gravedad, dispersión, altura, dirección). /fcs
+## Notes-esMX: Ajusta los CVars de los números de daño flotantes (estilo, tamaño, gravedad, dispersión, altura, dirección). /fcs
+## Notes-ruRU: Настройка CVar всплывающих чисел урона (стиль, размер, гравитация, разброс, высота, направление). /fcs
+## Notes-itIT: Regola i CVar dei numeri di danno fluttuanti (stile, dimensione, gravità, dispersione, altezza, direzione). /fcs
+## Notes-ptBR: Ajuste os CVars dos números de dano flutuantes (estilo, tamanho, gravidade, dispersão, altura, direção). /fcs
+## Notes-zhCN: 调整浮动伤害数字的 CVar（样式、大小、重力、分散度、高度、方向）。/fcs
+## Notes-zhTW: 調整浮動傷害數字的 CVar（樣式、大小、重力、分散度、高度、方向）。/fcs
+## Notes-koKR: 떠오르는 피해 숫자의 CVar(스타일, 크기, 중력, 분산, 높이, 방향)를 조정합니다. /fcs
+## Version: 1.0.1
 ## SavedVariables: ForeverCombatStyleDB
 ## IconTexture: Interface\Icons\Spell_Fire_FlameBolt
 ## AddonCompartmentFunc: ForeverCombatStyle_OnAddonCompartmentClick
@@ -30,5 +30,4 @@ Locales/zhTW.lua
 Locales/koKR.lua
 Core.lua
 Widgets.lua
-Preview.lua
 Window.lua

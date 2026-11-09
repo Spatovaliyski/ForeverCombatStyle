@@ -3,7 +3,9 @@
 local ADDON_NAME, NS = ...
 _G.ForeverCombatStyle = NS
 
-NS.VERSION = "1.0.0"
+-- Single source of truth is the `## Version` line in the TOC. C_AddOns.* on current clients, the old global elsewhere.
+local GetAddOnMetadata = (C_AddOns and C_AddOns.GetAddOnMetadata) or _G.GetAddOnMetadata
+NS.VERSION = (GetAddOnMetadata and GetAddOnMetadata(ADDON_NAME, "Version")) or "?"
 NS.PREFIX = "|cff8ee6deForeverCombatStyle:|r "
 
 local abs = math.abs
@@ -13,7 +15,8 @@ local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 --   kind    "slider" (min/max/step/decimals), "choice" (options = { {value, label}, ... })
 --           or "toggle" (0 / 1)
 --   hardMin / hardMax   limits for typed values (the slider range is only the drag range)
---   default             the WoW Forever default listed on the Warcraft wiki
+--   default             fallback default (from the Warcraft wiki), used only when the client cannot
+--                       report its own; see NS.defaults
 --   label, tip and option labels are English keys into NS.L; the window translates them when it
 --   draws them (the language can change while the game runs), so keep them in Locales/enUS.lua.
 NS.SETTINGS = {
@@ -138,7 +141,7 @@ NS.SETTINGS = {
         cvar = "WorldTextMinAlpha_v2", kind = "slider",
         label = "Minimum opacity", default = 0.5, min = 0, max = 1, step = 0.05, decimals = 2,
         hardMin = 0, hardMax = 1,
-        tip = "Opacity floor for numbers. Not shown in the preview.",
+        tip = "Opacity floor for numbers.",
     },
 }
 
@@ -148,6 +151,7 @@ for _, setting in ipairs(NS.SETTINGS) do
 end
 
 NS.values = {}      -- cvar -> number, mirrors the live CVar (falls back to the default)
+NS.defaults = {}    -- cvar -> number, the default the client reports (falls back to `default` above)
 NS.available = {}   -- cvar -> true when this client knows the CVar
 NS.listeners = {}   -- functions called as fn(cvar, value) after a change
 
@@ -163,6 +167,19 @@ local function ReadCVar(name)
     local ok, value = pcall(getter, name)
     if ok then
         return value
+    end
+    return nil
+end
+
+-- The default the client itself reports for a CVar, or nil when it cannot say.
+local function ReadCVarDefault(name)
+    local getter = (C_CVar and C_CVar.GetCVarDefault) or GetCVarDefault
+    if not getter then
+        return nil
+    end
+    local ok, value = pcall(getter, name)
+    if ok then
+        return tonumber(value)
     end
     return nil
 end
@@ -203,12 +220,14 @@ end
 -- Re-read every CVar from the client.
 function NS.Refresh()
     for _, setting in ipairs(NS.SETTINGS) do
+        -- The client's own default wins; the table above is only the fallback.
+        NS.defaults[setting.cvar] = ReadCVarDefault(setting.cvar) or setting.default
         local number = tonumber(ReadCVar(setting.cvar))
         if number then
             NS.values[setting.cvar] = number
             NS.available[setting.cvar] = true
         else
-            NS.values[setting.cvar] = setting.default
+            NS.values[setting.cvar] = NS.defaults[setting.cvar]
             NS.available[setting.cvar] = false
         end
     end
@@ -268,11 +287,11 @@ function NS.Reapply()
     end
 end
 
--- Back to the WoW Forever defaults.
+-- Back to the defaults the client reports (the table's values where it cannot say).
 function NS.Reset()
     for _, setting in ipairs(NS.SETTINGS) do
         if NS.available[setting.cvar] then
-            WriteCVar(setting.cvar, FormatNumber(setting.default))
+            WriteCVar(setting.cvar, FormatNumber(NS.defaults[setting.cvar] or setting.default))
         end
     end
     if NS.db then
@@ -286,6 +305,35 @@ function NS.Print(message)
     print(NS.PREFIX .. message)
 end
 
+-- /fcs debug: what the client says about every CVar this addon controls, next to the fallback
+-- default in the table above, and a few start-position CVars the addon does not control (they are
+-- on the Retail CVar list). Stays in English.
+local PROBES = {
+    "WorldTextNonRandomZ_v2", "WorldTextRandomZMin_v2", "WorldTextRandomZMax_v2", "WorldTextRandomXY_v2",
+    "WorldTextMinSize",
+}
+
+function NS.DebugCVars()
+    NS.Print("CVars: name = live value (client default, fallback default)")
+    for _, setting in ipairs(NS.SETTINGS) do
+        local live = tonumber(ReadCVar(setting.cvar))
+        local client = ReadCVarDefault(setting.cvar)
+        local note = ""
+        if live == nil then
+            note = "  [not on this client]"
+        elseif client and abs(client - setting.default) > 1e-6 then
+            note = "  [client default differs]"
+        end
+        NS.Print(string.format("%s = %s (%s, %s)%s", setting.cvar, live and FormatNumber(live) or "?",
+            client and FormatNumber(client) or "?", FormatNumber(setting.default), note))
+    end
+    for _, name in ipairs(PROBES) do
+        local live, client = ReadCVar(name), ReadCVarDefault(name)
+        NS.Print(string.format("%s = %s (%s)%s", name, tostring(live), client and FormatNumber(client) or "?",
+            live == nil and "  [not on this client]" or ""))
+    end
+end
+
 ---------------------------------------------------------------------------------------------------
 -- Saved variables and events
 ---------------------------------------------------------------------------------------------------
@@ -295,7 +343,8 @@ local function InitDB()
     local db = ForeverCombatStyleDB
     if type(db.values) ~= "table" then db.values = {} end
     if db.reapply == nil then db.reapply = true end
-    if db.showPreview == nil then db.showPreview = true end
+    -- Saved settings of the preview drawer and of Live mode, which no longer exist.
+    db.showPreview, db.previewHeight, db.previewSlow, db.liveMode = nil, nil, nil, nil
     if not NS:IsLocalePreference(db.locale) then db.locale = "auto" end
     NS.db = db
     NS:ApplyLocale()
@@ -330,8 +379,9 @@ SlashCmdList["FOREVERCOMBATSTYLE"] = function(message)
         NS.Print(L["all combat text CVars set back to the WoW Forever defaults."])
     elseif message == "help" or message == "?" then
         NS.Print(L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."])
-    elseif message == "debug" and NS.Debug then
-        NS.Debug()
+    elseif message == "debug" then
+        NS.DebugCVars()
+        if NS.Debug then NS.Debug() end
     elseif NS.Toggle then
         NS.Toggle()
     end

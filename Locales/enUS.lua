@@ -85,7 +85,7 @@ L["Show your pet's spell damage."] = "Show your pet's spell damage."
 L["How long the size animation lasts, in seconds."] = "How long the size animation lasts, in seconds."
 L["How sharply hit numbers settle to their size."] = "How sharply hit numbers settle to their size."
 L["How sharply crits settle to their size."] = "How sharply crits settle to their size."
-L["Opacity floor for numbers. Not shown in the preview."] = "Opacity floor for numbers. Not shown in the preview."
+L["Opacity floor for numbers."] = "Opacity floor for numbers."
 L["Not available on this client."] = "Not available on this client."
 L["This setting is not available on this client."] = "This setting is not available on this client."
 L["Click to type an exact value."] = "Click to type an exact value."
@@ -97,8 +97,8 @@ L["Numbers ease into view and settle into place gradually, for a softer, more fl
     "Numbers ease into view and settle into place gradually, for a softer, more fluid feel."
 L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."] =
     "Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."
-L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."] =
-    "Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."
+L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose."] =
+    "Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose."
 
 -- Behaviour
 L["Re-apply at login"] = "Re-apply at login"
@@ -117,21 +117,6 @@ L["Reload UI"] = "Reload UI"
 L["Reload the interface. Use it if a change does not show up in game."] = "Reload the interface. Use it if a change does not show up in game."
 L["Reset Defaults"] = "Reset Defaults"
 L["Put every combat text setting back to the WoW Forever default."] = "Put every combat text setting back to the WoW Forever default."
-
--- Preview
-L["Hide preview"] = "Hide preview"
-L["Show preview"] = "Show preview"
-L["Show sample hits, crits and incoming damage inside this window."] = "Show sample hits, crits and incoming damage inside this window."
-L["Replay"] = "Replay"
-L["Restart the sample numbers."] = "Restart the sample numbers."
-L["Approximate preview  ·  check on a real target"] = "Approximate preview  ·  check on a real target"
-L["Hit"] = "Hit"
-L["Crit"] = "Crit"
-L["Heal"] = "Heal"
-L["Taken"] = "Taken"
-L["Off"] = "Off"
-L["Drag to change the preview height. Double-click to reset it."] =
-    "Drag to change the preview height. Double-click to reset it."
 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "all combat text CVars set back to the WoW Forever defaults."

@@ -85,7 +85,7 @@ L["Show your pet's spell damage."] = "顯示你寵物的法術傷害。"
 L["How long the size animation lasts, in seconds."] = "大小動畫持續的時間，單位為秒。"
 L["How sharply hit numbers settle to their size."] = "一般命中數字穩定到其大小的劇烈程度。"
 L["How sharply crits settle to their size."] = "致命一擊數字穩定到其大小的劇烈程度。"
-L["Opacity floor for numbers. Not shown in the preview."] = "數字的最低不透明度。預覽中不會顯示。"
+L["Opacity floor for numbers."] = "數字的最低不透明度。"
 L["Not available on this client."] = "此用戶端不可用。"
 L["This setting is not available on this client."] = "此設定在此用戶端上不可用。"
 L["Click to type an exact value."] = "點擊輸入精確數值。"
@@ -97,8 +97,8 @@ L["Numbers ease into view and settle into place gradually, for a softer, more fl
     "數字會漸漸顯現並逐步穩定到最終大小，觀感更柔和、更流暢。"
 L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."] =
     "數字會立即出現並直線移動，沒有逐漸放大的過程，觀感更俐落。"
-L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."] =
-    "兩種樣式都可以自由調整：大小以及%s頁面上的所有滑桿（包括彈出與淡出漸變）適用於你所選的樣式。下方預覽會顯示效果。"
+L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose."] =
+    "兩種樣式都可以自由調整：大小以及%s頁面上的所有滑桿（包括彈出與淡出漸變）適用於你所選的樣式。"
 
 -- Behaviour
 L["Re-apply at login"] = "登入時重新套用"
@@ -117,20 +117,6 @@ L["Reload UI"] = "重新載入介面"
 L["Reload the interface. Use it if a change does not show up in game."] = "重新載入介面。若某項變更沒有在遊戲中生效，請使用此項。"
 L["Reset Defaults"] = "還原預設值"
 L["Put every combat text setting back to the WoW Forever default."] = "將所有戰鬥文字設定還原為 WoW Forever 的預設值。"
-
--- Preview
-L["Hide preview"] = "隱藏預覽"
-L["Show preview"] = "顯示預覽"
-L["Show sample hits, crits and incoming damage inside this window."] = "在此視窗中顯示範例命中、致命一擊和受到的傷害。"
-L["Replay"] = "重播"
-L["Restart the sample numbers."] = "重新開始範例數字。"
-L["Approximate preview  ·  check on a real target"] = "預覽僅供參考  ·  請在真實目標上確認"
-L["Hit"] = "一般命中"
-L["Crit"] = "致命一擊"
-L["Heal"] = "治療"
-L["Taken"] = "承受"
-L["Off"] = "關閉"
-L["Drag to change the preview height. Double-click to reset it."] = "拖曳以調整預覽高度。按兩下重設。"
 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "所有戰鬥文字 CVar 已還原為 WoW Forever 預設值。"

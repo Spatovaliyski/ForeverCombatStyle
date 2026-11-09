@@ -1,17 +1,16 @@
 # Forever Combat Style
 
-A small WoW Forever addon for tuning the floating damage number CVars with a live preview.
+A small WoW Forever addon for tuning the floating damage number CVars.
 Open it with `/fcs` (or `/combatstyle`), or from the addon compartment button.
 
 The window copies the PlateSCT settings layout: a page sidebar on the left (General, Combat, Appearance) with
-Reload UI and Reset Defaults pinned at the bottom, a scrolling page with a title and subtitle, and a preview drawer
-along the bottom that replays sample Hit, Crit, Heal and Taken numbers as you change settings. A PlateSCT-style
+Reload UI and Reset Defaults pinned at the bottom, and a scrolling page with a title and subtitle. A PlateSCT-style
 warning at the top of every page notes that this works with Blizzard's own floating text and that no further
 customisation (fonts, colors, icons) can be added.
 
 ## What it controls
 
-| Page | Section | Control | CVar | Wiki default |
+| Page | Section | Control | CVar | Fallback default |
 | --- | --- | --- | --- | --- |
 | General | Number Style | Style (Retail / Classic, two cards) | `classicStyleWorldText` | 0 |
 | General | Number Style | Size | `WorldTextScale_v2` | 1 |
@@ -38,8 +37,10 @@ customisation (fonts, colors, icons) can be added.
 | Appearance | Pop & Fade | Crit ramp strength | `WorldTextRampPowCrit_v2` | 8 |
 | Appearance | Pop & Fade | Minimum opacity | `WorldTextMinAlpha_v2` | 0.5 |
 
-Defaults come from the Warcraft wiki Classic CVar list. "Reset Defaults" (or `/fcs reset`) writes them back.
-That includes "Your scrolling text", whose wiki default is off.
+"Reset Defaults" (or `/fcs reset`) writes back the defaults the client itself reports (`GetCVarDefault`). The
+"Fallback default" column is only used for a CVar the client cannot report one for; those values come from the
+Warcraft wiki and several differ from the client's (the Retail list has Hit height 0.015, Crit height 0.0275,
+Spread 1 and Directional movement 1). Reset includes "Your scrolling text", which is off by default.
 
 - The number style is two large cards side by side instead of a small toggle. Retail is a smooth reveal (numbers
   ease in and settle gradually); Classic is instant and direct. A note under the cards explains that both styles are
@@ -51,28 +52,18 @@ That includes "Your scrolling text", whose wiki default is off.
 - "Reload UI" is in the sidebar in case a change does not show up in game.
 - Drag the window's bottom-right corner to resize it (720x560 up to the screen size); double-click the corner to
   restore the default size. The size is saved, and the window scales down on small screens.
-- The preview stage grows with the window's height (about a third of it, 230-440 px). To set it yourself, drag the
-  strip above the stage (the one with Hide preview and Replay) up or down; double-click the strip to go back to
-  automatic. The dragged height is saved, and always leaves the settings page at least 170 px.
-- `/fcs debug` prints how a few labels are being drawn (for diagnosing blank text).
+- `/fcs debug` prints, for every CVar the addon controls (and a few start-position CVars it does not), the live
+  value, the client's default and the fallback default, then how a few labels are being drawn (for diagnosing blank text).
 
-## About the preview
+## No preview
 
-The wiki lists these CVars but gives no formulas, so the preview is an approximation of how the client animates
-them. The motion constants are all in the `PHYS` table at the top of `Preview.lua`; adjust them if the preview
-and a real target disagree. The float mode only affects the "Taken" column. Directional numbers alternate sides
-in the preview, since the real direction depends on where you stand.
+The window has no preview on purpose. The real floating numbers are Blizzard's own 3D world text; the wiki lists the CVars
+but gives no formulas, and there are start-position CVars the addon does not control (`WorldTextNonRandomZ_v2`,
+`WorldTextRandomZMin_v2`, `WorldTextRandomZMax_v2`, `WorldTextRandomXY_v2` on the Retail list). Drawings of them inside the
+window (animated columns, an arena, a static sketch) never looked like the game, so they were removed. Change a setting
+and watch the real numbers over a target you attack.
 
-Timing: with the default Gravity (0.5), numbers over a target fade out before they start to fall, as they do in game,
-so a Retail number is gone about 1.1 s after it appears, just before the top of its arc. Higher Gravity still shows
-them dropping. `PHYS.LIFETIME` and `PHYS.FADE_START` set this; your own scrolling text (Taken) has its own
-`PLAYER_LIFETIME` and `PLAYER_FADE_START`.
-
-The preview columns follow the switches: a column whose setting is off (Hit and Crit with "Damage over targets",
-Heal with "Healing you do", Taken with "Your scrolling text") shows "Off".
-
-The wiki gives no description for the Pop & Fade CVars. What they do is inferred from their names: the ramp
-settings drive the preview's size animation, and "Minimum opacity" is not shown in the preview.
+The wiki gives no description for the Pop & Fade CVars; what they do is inferred from their names.
 
 The Up / Down / Arc labels (1 / 2 / 3) follow Blizzard's combat text scroll options and are not on the wiki page.
 
@@ -95,8 +86,8 @@ button that shows the GitHub Issues URL to copy. Terms shared with PlateSCT reus
 - `Locales/enUS.lua`: every string, written `L["English text"] = "English text"`. The English text is the key.
 - `Locales/<code>.lua`: one file per language, with the same keys in the same order.
 - Text is looked up where it is drawn (`L["..."]`), never when a file loads, because the language can change while the
-  game runs. The `label`, `tip` and option names in `NS.SETTINGS` (`Core.lua`) and the preview column titles are
-  English keys that are translated when drawn.
+  game runs. The `label`, `tip` and option names in `NS.SETTINGS` (`Core.lua`) are English keys that are translated
+  when drawn.
 - To add text: add the key to `enUS.lua` and to every other locale file. `/fcs debug` output stays in English.
 
 ## Files
@@ -104,6 +95,5 @@ button that shows the GitHub Issues URL to copy. Terms shared with PlateSCT reus
 - `Core.lua`: CVar list, reading/writing, saved variables, slash commands
 - `Locales/`: the language registry and one file per language (see above)
 - `Widgets.lua`: palette, rounded shapes, buttons, sliders, switches, dropdown, style cards, rows (ported from the PlateSCT settings)
-- `Preview.lua`: the preview drawer and number animation
 - `Window.lua`: the window
 - `Media/`: rounded-corner texture, icons and Source Sans 3 fonts (SIL OFL, see `Media/Fonts/SourceSans3-OFL.md`), copied from PlateSCT

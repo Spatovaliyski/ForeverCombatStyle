@@ -85,7 +85,7 @@ L["Show your pet's spell damage."] = "내 소환수의 주문 피해를 표시�
 L["How long the size animation lasts, in seconds."] = "크기 애니메이션이 지속되는 시간(초)입니다."
 L["How sharply hit numbers settle to their size."] = "일반 적중 숫자가 제 크기로 안정되는 급격한 정도입니다."
 L["How sharply crits settle to their size."] = "치명타 숫자가 제 크기로 안정되는 급격한 정도입니다."
-L["Opacity floor for numbers. Not shown in the preview."] = "숫자의 최소 불투명도입니다. 미리 보기에는 표시되지 않습니다."
+L["Opacity floor for numbers."] = "숫자의 최소 불투명도입니다."
 L["Not available on this client."] = "이 클라이언트에서는 사용할 수 없습니다."
 L["This setting is not available on this client."] = "이 설정은 이 클라이언트에서 사용할 수 없습니다."
 L["Click to type an exact value."] = "클릭하여 정확한 값을 입력합니다."
@@ -97,8 +97,8 @@ L["Numbers ease into view and settle into place gradually, for a softer, more fl
     "숫자가 서서히 나타나 점차 자리를 잡아, 더 부드럽고 자연스러운 느낌을 줍니다."
 L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."] =
     "숫자가 즉시 나타나 곧게 움직이며 점진적인 변화가 없어, 더 빠르고 경쾌한 느낌을 줍니다."
-L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose. The preview below shows the result."] =
-    "두 스타일 모두 자유롭게 조정할 수 있습니다. 크기와 %s 페이지의 모든 슬라이더(등장 및 사라짐 곡선 포함)는 선택한 스타일에 적용됩니다. 아래 미리 보기에서 결과를 확인할 수 있습니다."
+L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose."] =
+    "두 스타일 모두 자유롭게 조정할 수 있습니다. 크기와 %s 페이지의 모든 슬라이더(등장 및 사라짐 곡선 포함)는 선택한 스타일에 적용됩니다."
 
 -- Behaviour
 L["Re-apply at login"] = "접속 시 다시 적용"
@@ -117,20 +117,6 @@ L["Reload UI"] = "UI 다시 불러오기"
 L["Reload the interface. Use it if a change does not show up in game."] = "인터페이스를 다시 불러옵니다. 변경 사항이 게임에 적용되지 않을 때 사용하세요."
 L["Reset Defaults"] = "기본값으로 초기화"
 L["Put every combat text setting back to the WoW Forever default."] = "모든 전투 문자 설정을 WoW Forever 기본값으로 되돌립니다."
-
--- Preview
-L["Hide preview"] = "미리 보기 숨기기"
-L["Show preview"] = "미리 보기 표시"
-L["Show sample hits, crits and incoming damage inside this window."] = "이 창 안에 예시 적중, 치명타, 받는 피해를 표시합니다."
-L["Replay"] = "다시 재생"
-L["Restart the sample numbers."] = "예시 숫자를 처음부터 다시 표시합니다."
-L["Approximate preview  ·  check on a real target"] = "대략적인 미리 보기  ·  실제 대상에서 확인하세요"
-L["Hit"] = "일반 적중"
-L["Crit"] = "치명타"
-L["Heal"] = "치유"
-L["Taken"] = "받음"
-L["Off"] = "꺼짐"
-L["Drag to change the preview height. Double-click to reset it."] = "끌어서 미리 보기 높이를 조절합니다. 두 번 클릭하면 초기화됩니다."
 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "모든 전투 문자 CVar를 WoW Forever 기본값으로 되돌렸습니다."
