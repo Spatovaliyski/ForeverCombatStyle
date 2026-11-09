@@ -1,7 +1,6 @@
 # Forever Combat Style
 
-A small WoW Forever addon for tuning the floating damage number CVars. The real numbers are the preview: the window
-fades out of the way while you change a setting, so you can watch them over a target you attack.
+A small WoW Forever addon for tuning the floating damage number CVars.
 Open it with `/fcs` (or `/combatstyle`), or from the addon compartment button.
 
 The window copies the PlateSCT settings layout: a page sidebar on the left (General, Combat, Appearance) with
@@ -18,7 +17,6 @@ customisation (fonts, colors, icons) can be added.
 | General | Your Combat Text | Your scrolling text (on / off) | `enableFloatingCombatText` | 0 |
 | General | Your Combat Text | Float mode (Up / Down / Arc) | `floatingCombatTextFloatMode_v2` | 1 |
 | General | Behaviour | Re-apply at login | (addon setting) | on |
-| General | Behaviour | See through while adjusting | (addon setting) | on |
 | General | Language | Language (Auto or one of 10 languages) | (addon setting) | Auto |
 | Combat | Damage | Damage over targets | `floatingCombatTextCombatDamage_v2` | on |
 | Combat | Damage | All auto-attacks | `floatingCombatTextCombatDamageAllAutos_v2` | on |
@@ -57,19 +55,13 @@ Spread 1 and Directional movement 1). Reset includes "Your scrolling text", whic
 - `/fcs debug` prints, for every CVar the addon controls (and a few start-position CVars it does not), the live
   value, the client's default and the fallback default, then how a few labels are being drawn (for diagnosing blank text).
 
-## Live mode (there is no preview in the window)
+## No preview
 
-The real floating numbers are Blizzard's own 3D world text. The wiki lists the CVars but gives no formulas, and there are
-start-position CVars the addon does not control (`WorldTextNonRandomZ_v2`, `WorldTextRandomZMin_v2`,
-`WorldTextRandomZMax_v2`, `WorldTextRandomXY_v2` on the Retail list), so a drawing inside a window could not match the game,
-and the earlier previews (animated columns, an arena, a static sketch) were removed for that reason. The game itself is
-the preview instead:
-
-While a setting changes (a slider drag, a typed value, the mouse wheel, a switch or a style card) the window fades to
-about 15% and a small chip next to the cursor shows the setting and its value. It stays faded while the mouse button is
-down and for 1.5 s after the last change, then comes back. Attack a training dummy and the real numbers change as you
-drag. Turn it off with General > Behaviour > "See through while adjusting". The constants are in `LIVE` at the top of
-`Live.lua`.
+The window has no preview on purpose. The real floating numbers are Blizzard's own 3D world text; the wiki lists the CVars
+but gives no formulas, and there are start-position CVars the addon does not control (`WorldTextNonRandomZ_v2`,
+`WorldTextRandomZMin_v2`, `WorldTextRandomZMax_v2`, `WorldTextRandomXY_v2` on the Retail list). Drawings of them inside the
+window (animated columns, an arena, a static sketch) never looked like the game, so they were removed. Change a setting
+and watch the real numbers over a target you attack.
 
 The wiki gives no description for the Pop & Fade CVars; what they do is inferred from their names.
 
@@ -103,6 +95,5 @@ button that shows the GitHub Issues URL to copy. Terms shared with PlateSCT reus
 - `Core.lua`: CVar list, reading/writing, saved variables, slash commands
 - `Locales/`: the language registry and one file per language (see above)
 - `Widgets.lua`: palette, rounded shapes, buttons, sliders, switches, dropdown, style cards, rows (ported from the PlateSCT settings)
-- `Live.lua`: Live mode, which fades the window while a setting changes
 - `Window.lua`: the window
 - `Media/`: rounded-corner texture, icons and Source Sans 3 fonts (SIL OFL, see `Media/Fonts/SourceSans3-OFL.md`), copied from PlateSCT

@@ -75,13 +75,6 @@ local function BuildPages()
                     L["Put your settings back at login if the client reset them."],
                     function() return NS.db.reapply end,
                     function(value) NS.db.reapply = value end)
-                layout:Switch(L["See through while adjusting"],
-                    L["Fade this window while you change a setting, so you can watch the real numbers on a target."],
-                    function() return NS.db.liveMode ~= false end,
-                    function(value)
-                        NS.db.liveMode = value
-                        if not value and NS.LiveStop then NS.LiveStop() end
-                    end)
                 layout:Heading(L["Language"])
                 local choices = {}
                 for _, option in ipairs(NS.LOCALE_OPTIONS) do

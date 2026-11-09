@@ -103,10 +103,6 @@ L["Both styles are fully tweakable: Size and every slider on the %s page (includ
 -- Behaviour
 L["Re-apply at login"] = "접속 시 다시 적용"
 L["Put your settings back at login if the client reset them."] = "클라이언트가 설정을 초기화했다면 접속 시 내 설정을 되돌립니다."
-L["See through while adjusting"] = "조정 중 투명하게"
-L["Fade this window while you change a setting, so you can watch the real numbers on a target."] = "설정을 바꾸는 동안 이 창을 투명하게 하여 대상에 표시되는 실제 숫자를 볼 수 있게 합니다."
-L["On"] = "켜짐"
-L["Off"] = "꺼짐"
 
 -- Language
 L["Auto"] = "자동"

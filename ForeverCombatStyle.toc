@@ -11,7 +11,7 @@
 ## Notes-zhCN: 调整浮动伤害数字的 CVar（样式、大小、重力、分散度、高度、方向）。/fcs
 ## Notes-zhTW: 調整浮動傷害數字的 CVar（樣式、大小、重力、分散度、高度、方向）。/fcs
 ## Notes-koKR: 떠오르는 피해 숫자의 CVar(스타일, 크기, 중력, 분산, 높이, 방향)를 조정합니다. /fcs
-## Version: 1.0.0
+## Version: 1.0.1
 ## SavedVariables: ForeverCombatStyleDB
 ## IconTexture: Interface\Icons\Spell_Fire_FlameBolt
 ## AddonCompartmentFunc: ForeverCombatStyle_OnAddonCompartmentClick
@@ -31,4 +31,3 @@ Locales/koKR.lua
 Core.lua
 Widgets.lua
 Window.lua
-Live.lua

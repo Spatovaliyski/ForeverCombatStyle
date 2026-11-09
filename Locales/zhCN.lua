@@ -103,10 +103,6 @@ L["Both styles are fully tweakable: Size and every slider on the %s page (includ
 -- Behaviour
 L["Re-apply at login"] = "登录时重新应用"
 L["Put your settings back at login if the client reset them."] = "如果客户端重置了设置，登录时将你的设置恢复。"
-L["See through while adjusting"] = "调整时透明"
-L["Fade this window while you change a setting, so you can watch the real numbers on a target."] = "更改设置时让此窗口变透明，方便在目标上查看真实的数字。"
-L["On"] = "开"
-L["Off"] = "关闭"
 
 -- Language
 L["Auto"] = "自动"

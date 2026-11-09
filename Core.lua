@@ -3,7 +3,9 @@
 local ADDON_NAME, NS = ...
 _G.ForeverCombatStyle = NS
 
-NS.VERSION = "1.0.0"
+-- Single source of truth is the `## Version` line in the TOC. C_AddOns.* on current clients, the old global elsewhere.
+local GetAddOnMetadata = (C_AddOns and C_AddOns.GetAddOnMetadata) or _G.GetAddOnMetadata
+NS.VERSION = (GetAddOnMetadata and GetAddOnMetadata(ADDON_NAME, "Version")) or "?"
 NS.PREFIX = "|cff8ee6deForeverCombatStyle:|r "
 
 local abs = math.abs
@@ -341,8 +343,8 @@ local function InitDB()
     local db = ForeverCombatStyleDB
     if type(db.values) ~= "table" then db.values = {} end
     if db.reapply == nil then db.reapply = true end
-    -- Saved settings of the preview drawer, which no longer exists.
-    db.showPreview, db.previewHeight, db.previewSlow = nil, nil, nil
+    -- Saved settings of the preview drawer and of Live mode, which no longer exist.
+    db.showPreview, db.previewHeight, db.previewSlow, db.liveMode = nil, nil, nil, nil
     if not NS:IsLocalePreference(db.locale) then db.locale = "auto" end
     NS.db = db
     NS:ApplyLocale()

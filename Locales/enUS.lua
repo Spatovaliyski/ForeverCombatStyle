@@ -103,10 +103,6 @@ L["Both styles are fully tweakable: Size and every slider on the %s page (includ
 -- Behaviour
 L["Re-apply at login"] = "Re-apply at login"
 L["Put your settings back at login if the client reset them."] = "Put your settings back at login if the client reset them."
-L["See through while adjusting"] = "See through while adjusting"
-L["Fade this window while you change a setting, so you can watch the real numbers on a target."] = "Fade this window while you change a setting, so you can watch the real numbers on a target."
-L["On"] = "On"
-L["Off"] = "Off"
 
 -- Language
 L["Auto"] = "Auto"
