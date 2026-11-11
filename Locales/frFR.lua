@@ -121,3 +121,21 @@ L["Put every combat text setting back to the WoW Forever default."] = "Rétablit
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "tous les CVars du texte de combat ont été rétablis aux valeurs par défaut de WoW Forever."
 L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."] = "/fcs ouvre la fenêtre. /fcs reset rétablit les valeurs par défaut de WoW Forever."
+
+-- Companion addon (PlateSCT / Forever Combat Style)
+L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."] = "PlateSCT masque le texte de combat flottant de Blizzard : ces réglages ne s'afficheront donc pas en jeu."
+L["Show Blizzard numbers"] = "Afficher les nombres de Blizzard"
+L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."] = "Désactive « Masquer le texte de combat flottant de Blizzard » dans PlateSCT. Les nombres de PlateSCT continuent de fonctionner."
+L["Alternative"] = "Alternative"
+L["Want full control instead of Blizzard's limits?"] = "Envie d'un contrôle total, sans les limites de Blizzard ?"
+L["PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."] = "PlateSCT remplace les nombres de Blizzard par les siens : chaque détail est à vous de styliser."
+L["Numbers on nameplates or in screen areas"] = "Nombres sur les barres de nom ou dans des zones de l'écran"
+L["Any font, size and color"] = "Police, taille et couleur au choix"
+L["Spell icons and damage-school colors"] = "Icônes de sort et couleurs par école de dégâts"
+L["Damage threshold and abbreviations"] = "Seuil de dégâts et abréviations"
+L["Combine rapid hits into one number"] = "Regroupe les coups rapides en un seul nombre"
+L["Crit sounds and incoming damage"] = "Sons de critique et dégâts subis"
+L["Open PlateSCT"] = "Ouvrir PlateSCT"
+L["Get PlateSCT"] = "Obtenir PlateSCT"
+L["Installed. Opens its settings."] = "Installé. Ouvre ses réglages."
+L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Gratuit sur CurseForge. Fonctionne sur Forever, Midnight et Classic."

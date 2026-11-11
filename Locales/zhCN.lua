@@ -121,3 +121,21 @@ L["Put every combat text setting back to the WoW Forever default."] = "将所有
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "所有战斗文字 CVar 已恢复为 WoW Forever 默认值。"
 L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."] = "/fcs 打开窗口。/fcs reset 恢复 WoW Forever 默认值。"
+
+-- Companion addon (PlateSCT / Forever Combat Style)
+L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."] = "PlateSCT 正在隐藏暴雪浮动战斗文字，因此这些设置不会在游戏中显示。"
+L["Show Blizzard numbers"] = "显示暴雪数字"
+L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."] = "关闭 PlateSCT 的“隐藏暴雪浮动战斗文字”。PlateSCT 自己的数字仍会正常显示。"
+L["Alternative"] = "替代选择"
+L["Want full control instead of Blizzard's limits?"] = "想要完全掌控，而不受暴雪的限制？"
+L["PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."] = "PlateSCT 用自己的数字取代暴雪的数字，每个细节都由你来定制。"
+L["Numbers on nameplates or in screen areas"] = "数字显示在姓名板或屏幕区域"
+L["Any font, size and color"] = "任意字体、大小和颜色"
+L["Spell icons and damage-school colors"] = "法术图标和伤害类型颜色"
+L["Damage threshold and abbreviations"] = "伤害阈值和数字缩写"
+L["Combine rapid hits into one number"] = "将快速连击合并为一个数字"
+L["Crit sounds and incoming damage"] = "暴击音效和承受伤害"
+L["Open PlateSCT"] = "打开 PlateSCT"
+L["Get PlateSCT"] = "获取 PlateSCT"
+L["Installed. Opens its settings."] = "已安装。点击打开其设置。"
+L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "CurseForge 免费下载。支持 Forever、Midnight 和经典版。"

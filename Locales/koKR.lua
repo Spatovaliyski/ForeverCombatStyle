@@ -121,3 +121,21 @@ L["Put every combat text setting back to the WoW Forever default."] = "모든 �
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "모든 전투 문자 CVar를 WoW Forever 기본값으로 되돌렸습니다."
 L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."] = "/fcs는 창을 엽니다. /fcs reset은 WoW Forever 기본값을 복원합니다."
+
+-- Companion addon (PlateSCT / Forever Combat Style)
+L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."] = "PlateSCT가 블리자드 전투 메시지를 숨기고 있어 이 설정이 게임에 표시되지 않습니다."
+L["Show Blizzard numbers"] = "블리자드 숫자 표시"
+L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."] = "PlateSCT의 \"블리자드 전투 메시지 숨기기\"를 끕니다. PlateSCT 자체 숫자는 계속 작동합니다."
+L["Alternative"] = "대안"
+L["Want full control instead of Blizzard's limits?"] = "블리자드의 한계 대신 완전한 제어를 원하시나요?"
+L["PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."] = "PlateSCT는 블리자드 숫자를 자체 숫자로 바꿔, 모든 부분을 원하는 대로 꾸밀 수 있습니다."
+L["Numbers on nameplates or in screen areas"] = "이름표 또는 화면 영역에 숫자 표시"
+L["Any font, size and color"] = "원하는 글꼴, 크기, 색상"
+L["Spell icons and damage-school colors"] = "주문 아이콘과 피해 계열별 색상"
+L["Damage threshold and abbreviations"] = "피해 기준값과 숫자 축약"
+L["Combine rapid hits into one number"] = "빠른 연속 타격을 하나의 숫자로 합치기"
+L["Crit sounds and incoming damage"] = "치명타 소리와 받는 피해"
+L["Open PlateSCT"] = "PlateSCT 열기"
+L["Get PlateSCT"] = "PlateSCT 받기"
+L["Installed. Opens its settings."] = "설치됨. 설정을 엽니다."
+L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "CurseForge에서 무료. Forever, Midnight, 클래식 지원."

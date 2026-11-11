@@ -121,3 +121,21 @@ L["Put every combat text setting back to the WoW Forever default."] = "Setzt all
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "Alle Kampftext-CVars wurden auf die Standardwerte von WoW Forever zurückgesetzt."
 L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."] = "/fcs öffnet das Fenster. /fcs reset stellt die Standardwerte von WoW Forever wieder her."
+
+-- Companion addon (PlateSCT / Forever Combat Style)
+L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."] = "PlateSCT blendet Blizzards schwebenden Kampftext aus, daher sind diese Einstellungen im Spiel nicht zu sehen."
+L["Show Blizzard numbers"] = "Blizzard-Zahlen anzeigen"
+L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."] = "Schaltet „Blizzard-Schwebe-Kampftext ausblenden“ in PlateSCT aus. Die eigenen Zahlen von PlateSCT funktionieren weiter."
+L["Alternative"] = "Alternative"
+L["Want full control instead of Blizzard's limits?"] = "Volle Kontrolle statt Blizzards Grenzen?"
+L["PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."] = "PlateSCT ersetzt Blizzards Zahlen durch eigene – so gestaltest du jedes Detail selbst."
+L["Numbers on nameplates or in screen areas"] = "Zahlen auf Namensplaketten oder in Bildschirmbereichen"
+L["Any font, size and color"] = "Beliebige Schriftart, Größe und Farbe"
+L["Spell icons and damage-school colors"] = "Zaubersymbole und Farben nach Schadensschule"
+L["Damage threshold and abbreviations"] = "Schadensschwelle und Abkürzungen"
+L["Combine rapid hits into one number"] = "Schnelle Treffer zu einer Zahl zusammenfassen"
+L["Crit sounds and incoming damage"] = "Krit-Sounds und eingehender Schaden"
+L["Open PlateSCT"] = "PlateSCT öffnen"
+L["Get PlateSCT"] = "PlateSCT holen"
+L["Installed. Opens its settings."] = "Installiert. Öffnet die Einstellungen."
+L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Kostenlos auf CurseForge. Läuft auf Forever, Midnight und Classic."

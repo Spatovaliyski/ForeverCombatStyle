@@ -121,3 +121,21 @@ L["Put every combat text setting back to the WoW Forever default."] = "Riporta t
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "tutti i CVar del testo di combattimento sono stati riportati ai valori predefiniti di WoW Forever."
 L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."] = "/fcs apre la finestra. /fcs reset ripristina i valori predefiniti di WoW Forever."
+
+-- Companion addon (PlateSCT / Forever Combat Style)
+L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."] = "PlateSCT sta nascondendo il testo di combattimento fluttuante di Blizzard, quindi queste impostazioni non saranno visibili in gioco."
+L["Show Blizzard numbers"] = "Mostra i numeri di Blizzard"
+L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."] = "Disattiva «Nascondi il testo di combattimento fluttuante di Blizzard» in PlateSCT. I numeri di PlateSCT continuano a funzionare."
+L["Alternative"] = "Alternativa"
+L["Want full control instead of Blizzard's limits?"] = "Vuoi il pieno controllo invece dei limiti di Blizzard?"
+L["PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."] = "PlateSCT sostituisce i numeri di Blizzard con i propri, così ogni dettaglio è tuo da personalizzare."
+L["Numbers on nameplates or in screen areas"] = "Numeri sulle barre del nome o in aree dello schermo"
+L["Any font, size and color"] = "Qualsiasi carattere, dimensione e colore"
+L["Spell icons and damage-school colors"] = "Icone degli incantesimi e colori per scuola di danno"
+L["Damage threshold and abbreviations"] = "Soglia di danno e abbreviazioni"
+L["Combine rapid hits into one number"] = "Unisce i colpi rapidi in un solo numero"
+L["Crit sounds and incoming damage"] = "Suoni dei critici e danni subiti"
+L["Open PlateSCT"] = "Apri PlateSCT"
+L["Get PlateSCT"] = "Ottieni PlateSCT"
+L["Installed. Opens its settings."] = "Installato. Apre le sue impostazioni."
+L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Gratis su CurseForge. Funziona su Forever, Midnight e Classic."
