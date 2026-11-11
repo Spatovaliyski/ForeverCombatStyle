@@ -287,6 +287,14 @@ function NS.Reapply()
     end
 end
 
+-- Called by another addon after it rewrote combat text CVars (PlateSCT turning Blizzard's text
+-- back on sets every one to 1): read them again, put the saved values back, redraw the window.
+function NS.Resync()
+    NS.Refresh()
+    NS.Reapply()
+    if NS.RefreshWindow then NS.RefreshWindow() end
+end
+
 -- Back to the defaults the client reports (the table's values where it cannot say).
 function NS.Reset()
     for _, setting in ipairs(NS.SETTINGS) do

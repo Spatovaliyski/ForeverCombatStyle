@@ -121,3 +121,21 @@ L["Put every combat text setting back to the WoW Forever default."] = "Возв�
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "все CVar текста боя возвращены к значениям WoW Forever по умолчанию."
 L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."] = "/fcs открывает окно. /fcs reset восстанавливает значения WoW Forever по умолчанию."
+
+-- Companion addon (PlateSCT / Forever Combat Style)
+L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."] = "PlateSCT скрывает всплывающий боевой текст Blizzard, поэтому эти настройки не будут видны в игре."
+L["Show Blizzard numbers"] = "Показать числа Blizzard"
+L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."] = "Отключает «Скрыть всплывающий боевой текст Blizzard» в PlateSCT. Собственные числа PlateSCT продолжат работать."
+L["Alternative"] = "Альтернатива"
+L["Want full control instead of Blizzard's limits?"] = "Хотите полный контроль вместо ограничений Blizzard?"
+L["PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."] = "PlateSCT заменяет числа Blizzard своими, поэтому каждую деталь можно настроить под себя."
+L["Numbers on nameplates or in screen areas"] = "Числа на индикаторах или в областях экрана"
+L["Any font, size and color"] = "Любой шрифт, размер и цвет"
+L["Spell icons and damage-school colors"] = "Значки заклинаний и цвета школ урона"
+L["Damage threshold and abbreviations"] = "Порог урона и сокращения"
+L["Combine rapid hits into one number"] = "Объединение быстрых ударов в одно число"
+L["Crit sounds and incoming damage"] = "Звуки критов и входящий урон"
+L["Open PlateSCT"] = "Открыть PlateSCT"
+L["Get PlateSCT"] = "Получить PlateSCT"
+L["Installed. Opens its settings."] = "Установлен. Открывает его настройки."
+L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Бесплатно на CurseForge. Работает в Forever, Midnight и Classic."

@@ -121,3 +121,21 @@ L["Put every combat text setting back to the WoW Forever default."] = "Put every
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "all combat text CVars set back to the WoW Forever defaults."
 L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."] = "/fcs opens the window. /fcs reset restores the WoW Forever defaults."
+
+-- Companion addon (PlateSCT / Forever Combat Style)
+L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."] = "PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."
+L["Show Blizzard numbers"] = "Show Blizzard numbers"
+L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."] = "Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."
+L["Alternative"] = "Alternative"
+L["Want full control instead of Blizzard's limits?"] = "Want full control instead of Blizzard's limits?"
+L["PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."] = "PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."
+L["Numbers on nameplates or in screen areas"] = "Numbers on nameplates or in screen areas"
+L["Any font, size and color"] = "Any font, size and color"
+L["Spell icons and damage-school colors"] = "Spell icons and damage-school colors"
+L["Damage threshold and abbreviations"] = "Damage threshold and abbreviations"
+L["Combine rapid hits into one number"] = "Combine rapid hits into one number"
+L["Crit sounds and incoming damage"] = "Crit sounds and incoming damage"
+L["Open PlateSCT"] = "Open PlateSCT"
+L["Get PlateSCT"] = "Get PlateSCT"
+L["Installed. Opens its settings."] = "Installed. Opens its settings."
+L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Free on CurseForge. Works on Forever, Midnight and Classic."

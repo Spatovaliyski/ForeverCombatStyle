@@ -17,29 +17,109 @@ local RELAY_DELAYS = { 0.3, 1.0, 2.5 }
 
 local session = { page = "general", scroll = {} }
 
+-- The game cannot open a browser, so links are offered in a box to copy from.
+local function RegisterLinkPopup(name, url)
+    StaticPopupDialogs[name] = {
+        text = "",   -- filled in when shown, so it follows the language
+        button1 = CLOSE,
+        hasEditBox = true,
+        editBoxWidth = 360,
+        OnShow = function(self)
+            local editBox = self.GetEditBox and self:GetEditBox() or self.editBox or self.EditBox
+            editBox:SetText(url)
+            editBox:SetFocus()
+            editBox:HighlightText()
+        end,
+        EditBoxOnEnterPressed = function(self) self:GetParent():Hide() end,
+        EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        preferredIndex = 3,
+    }
+end
+
+local function ShowLinkPopup(name)
+    StaticPopupDialogs[name].text = L["Press Ctrl+C to copy the URL."]
+    StaticPopup_Show(name)
+end
+
 -- Where translation mistakes are reported (shown from the Language section).
-local TRANSLATION_ISSUES_URL = "https://github.com/Spatovaliyski/ForeverCombatStyle/issues"
-StaticPopupDialogs["FOREVERCOMBATSTYLE_TRANSLATION_ISSUES_URL"] = {
-    text = "",   -- filled in when shown, so it follows the language
-    button1 = CLOSE,
-    hasEditBox = true,
-    editBoxWidth = 360,
-    OnShow = function(self)
-        local editBox = self.GetEditBox and self:GetEditBox() or self.editBox or self.EditBox
-        editBox:SetText(TRANSLATION_ISSUES_URL)
-        editBox:SetFocus()
-        editBox:HighlightText()
-    end,
-    EditBoxOnEnterPressed = function(self) self:GetParent():Hide() end,
-    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3,
-}
+RegisterLinkPopup("FOREVERCOMBATSTYLE_TRANSLATION_ISSUES_URL", "https://github.com/Spatovaliyski/ForeverCombatStyle/issues")
+-- The companion addon, offered at the end of the General page when it is not installed.
+RegisterLinkPopup("FOREVERCOMBATSTYLE_PLATESCT_URL", "https://www.curseforge.com/wow/addons/platesct")
 
 local function S(cvar)
     return NS.BY_CVAR[cvar]
+end
+
+-- PlateSCT (same author) draws its own numbers and, by default, turns Blizzard's off: then
+-- nothing this window sets shows in game. Read through its global namespace when it is loaded.
+local function PlateSCT()
+    local addon = _G.PlateSCT
+    return type(addon) == "table" and addon or nil
+end
+
+local function PlateSCTHidesBlizzard()
+    local addon = PlateSCT()
+    return addon and type(addon.db) == "table" and addon.db.hideBlizzardFCT and true or false
+end
+
+-- The warning and its fix, shown under each page's banner while PlateSCT hides Blizzard's text.
+local function PlateSCTWarning(layout)
+    layout:When(PlateSCTHidesBlizzard, function()
+        layout:Warning(L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."])
+        layout:Action(L["Show Blizzard numbers"],
+            L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."],
+            function()
+                local addon = PlateSCT()
+                if addon and addon.SetHideBlizzardFCT then
+                    addon:SetHideBlizzardFCT(false)
+                elseif addon and addon.db then
+                    -- An older PlateSCT without the hook: turn the option off and its text back on.
+                    addon.db.hideBlizzardFCT = false
+                    if addon.RestoreBlizzardFCTSetting then addon:RestoreBlizzardFCTSetting() end
+                end
+                NS.Resync()
+            end)
+    end)
+end
+
+-- The PlateSCT advert at the end of the General page, in PlateSCT's ember colors: open it when it
+-- is loaded, otherwise offer its download link.
+local PLATESCT_LOGO = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Media\\UI\\PlateSCT.png"
+local function Companion(layout)
+    local addon = PlateSCT()
+    local installed = addon and addon.ShowOptions and true or false
+    layout:Promo({
+        logo = PLATESCT_LOGO,
+        watermark = true,
+        badge = L["Alternative"],
+        title = L["Want full control instead of Blizzard's limits?"],
+        body = L["PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."],
+        features = {
+            L["Numbers on nameplates or in screen areas"],
+            L["Any font, size and color"],
+            L["Spell icons and damage-school colors"],
+            L["Damage threshold and abbreviations"],
+            L["Combine rapid hits into one number"],
+            L["Crit sounds and incoming damage"],
+        },
+        button = installed and L["Open PlateSCT"] or L["Get PlateSCT"],
+        foot = installed and L["Installed. Opens its settings."]
+            or L["Free on CurseForge. Works on Forever, Midnight and Classic."],
+        onClick = function()
+            if installed then
+                if NS.frame then NS.frame:Hide() end
+                addon:ShowOptions()
+            else
+                ShowLinkPopup("FOREVERCOMBATSTYLE_PLATESCT_URL")
+            end
+        end,
+        from = { 0.384, 0.149, 0.043, 1 },
+        to = { 0.098, 0.071, 0.051, 1 },
+        ring = { 0.965, 0.553, 0.204, 1 },
+    })
 end
 
 -- The pages are made each time the window is built, not at load: every label is looked up in
@@ -52,6 +132,7 @@ local function BuildPages()
             subtitle = L["Number style, your own combat text, and how the addon behaves."],
             build = function(layout)
                 layout:Warning(warning)
+                PlateSCTWarning(layout)
                 layout:Heading(L["Number Style"])
                 layout:StyleCards(S("classicStyleWorldText"), {
                     [0] = {
@@ -93,11 +174,10 @@ local function BuildPages()
                 if NS:ResolveLocaleCode() ~= "enUS" then
                     layout:Note(L["This translation was generated with AI. If you find inconsistent terminology or incorrect wording, please report it through GitHub Issues. Thank you for your help! Translation contributors will be credited."])
                     layout:Action(L["Open Link"], L["Press Ctrl+C to copy the URL."], function()
-                        StaticPopupDialogs["FOREVERCOMBATSTYLE_TRANSLATION_ISSUES_URL"].text =
-                            L["Press Ctrl+C to copy the URL."]
-                        StaticPopup_Show("FOREVERCOMBATSTYLE_TRANSLATION_ISSUES_URL")
+                        ShowLinkPopup("FOREVERCOMBATSTYLE_TRANSLATION_ISSUES_URL")
                     end)
                 end
+                Companion(layout)
             end,
         },
         {
@@ -105,6 +185,7 @@ local function BuildPages()
             subtitle = L["Choose what appears: damage, healing, shields and pets."],
             build = function(layout)
                 layout:Warning(warning)
+                PlateSCTWarning(layout)
                 layout:Heading(L["Damage"])
                 layout:Toggle(S("floatingCombatTextCombatDamage_v2"))
                 layout:Toggle(S("floatingCombatTextCombatDamageAllAutos_v2"))
@@ -123,6 +204,7 @@ local function BuildPages()
             subtitle = L["How numbers fall, drift, start and fade."],
             build = function(layout)
                 layout:Warning(warning)
+                PlateSCTWarning(layout)
                 layout:Heading(L["Fall & Spread"])
                 layout:Slider(S("WorldTextGravity_v2"))
                 layout:Slider(S("WorldTextStartPosRandomness_v2"))
@@ -410,6 +492,15 @@ end
 -- Build the window again in the current language (called after the language changes). A frame
 -- cannot be destroyed, so the old one is hidden and dropped; its position is kept in `session`.
 -- If the window was never opened, the first /fcs builds it in the new language anyway.
+-- Show the window (never closes it); used by PlateSCT's "Open Forever Combat Style".
+function NS.Open()
+    if not NS.frame then
+        NS.frame = Build()
+    end
+    NS.frame:Show()
+    NS.frame:Raise()
+end
+
 function NS:RebuildWindow()
     local old = NS.frame
     if not old then

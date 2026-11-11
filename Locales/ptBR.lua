@@ -121,3 +121,21 @@ L["Put every combat text setting back to the WoW Forever default."] = "Restaura 
 -- Chat messages
 L["all combat text CVars set back to the WoW Forever defaults."] = "todos os CVars do texto de combate foram restaurados para o padrão do WoW Forever."
 L["/fcs opens the window. /fcs reset restores the WoW Forever defaults."] = "/fcs abre a janela. /fcs reset restaura os padrões do WoW Forever."
+
+-- Companion addon (PlateSCT / Forever Combat Style)
+L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."] = "O PlateSCT está ocultando o texto de combate flutuante da Blizzard, então estas configurações não vão aparecer no jogo."
+L["Show Blizzard numbers"] = "Mostrar números da Blizzard"
+L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."] = "Desativa “Ocultar texto de combate flutuante da Blizzard” no PlateSCT. Os números do próprio PlateSCT continuam funcionando."
+L["Alternative"] = "Alternativa"
+L["Want full control instead of Blizzard's limits?"] = "Quer controle total em vez dos limites da Blizzard?"
+L["PlateSCT replaces Blizzard's numbers with its own, so every part of them is yours to style."] = "O PlateSCT troca os números da Blizzard pelos próprios, então cada detalhe fica do seu jeito."
+L["Numbers on nameplates or in screen areas"] = "Números nas placas de nome ou em áreas da tela"
+L["Any font, size and color"] = "Qualquer fonte, tamanho e cor"
+L["Spell icons and damage-school colors"] = "Ícones de feitiço e cores por escola de dano"
+L["Damage threshold and abbreviations"] = "Limite de dano e abreviações"
+L["Combine rapid hits into one number"] = "Junta acertos rápidos em um só número"
+L["Crit sounds and incoming damage"] = "Sons de crítico e dano recebido"
+L["Open PlateSCT"] = "Abrir PlateSCT"
+L["Get PlateSCT"] = "Obter PlateSCT"
+L["Installed. Opens its settings."] = "Instalado. Abre as configurações dele."
+L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Grátis no CurseForge. Funciona no Forever, Midnight e Classic."
