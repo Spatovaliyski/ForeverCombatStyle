@@ -23,7 +23,7 @@ NS.SETTINGS = {
     {
         cvar = "classicStyleWorldText", kind = "choice",
         label = "Style", default = 0,
-        options = { { 0, "Retail" }, { 1, "Classic" } },
+        options = { { 1, "Retail" }, { 0, "Classic" } },
         tip = "Classic or Retail look for floating damage numbers.",
     },
     {
