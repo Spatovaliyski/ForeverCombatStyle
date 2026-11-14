@@ -135,11 +135,11 @@ local function BuildPages()
                 PlateSCTWarning(layout)
                 layout:Heading(L["Number Style"])
                 layout:StyleCards(S("classicStyleWorldText"), {
-                    [0] = {
+                    [1] = {
                         tagline = L["Smooth reveal"],
                         text = L["Numbers ease into view and settle into place gradually, for a softer, more fluid feel."],
                     },
-                    [1] = {
+                    [0] = {
                         tagline = L["Instant and direct"],
                         text = L["Numbers appear immediately and move straight, with no gradual build-up, for a snappier feel."],
                     },
