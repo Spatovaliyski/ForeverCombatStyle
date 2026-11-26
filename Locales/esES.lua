@@ -139,3 +139,8 @@ L["Open PlateSCT"] = "Abrir PlateSCT"
 L["Get PlateSCT"] = "Obtener PlateSCT"
 L["Installed. Opens its settings."] = "Instalado. Abre sus ajustes."
 L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Gratis en CurseForge. Funciona en Forever, Midnight y Classic."
+
+-- Damage preview
+L["Approximate preview"] = "Vista previa aproximada"
+L["Training Dummy"] = "Muñeco de entrenamiento"
+L["Damage over targets is off, so no numbers show in game."] = "«Daño sobre objetivos» está desactivado, así que no se muestran números en el juego."

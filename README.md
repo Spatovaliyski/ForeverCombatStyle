@@ -55,13 +55,25 @@ Spread 1 and Directional movement 1). Reset includes "Your scrolling text", whic
 - `/fcs debug` prints, for every CVar the addon controls (and a few start-position CVars it does not), the live
   value, the client's default and the fallback default, then how a few labels are being drawn (for diagnosing blank text).
 
-## No preview
+## Damage preview
 
-The window has no preview on purpose. The real floating numbers are Blizzard's own 3D world text; the wiki lists the CVars
-but gives no formulas, and there are start-position CVars the addon does not control (`WorldTextNonRandomZ_v2`,
-`WorldTextRandomZMin_v2`, `WorldTextRandomZMax_v2`, `WorldTextRandomXY_v2` on the Retail list). Drawings of them inside the
-window (animated columns, an arena, a static sketch) never looked like the game, so they were removed. Change a setting
-and watch the real numbers over a target you attack.
+An animated band across the top of the window's content, above every page (so it keeps playing on any tab), shows a
+training dummy with numbers popping off it every half second (every fourth one a crit), drawn in the game's damage
+font (`DAMAGE_TEXT_FONT`). It follows the live CVars, including while a slider is dragged:
+
+- Size: text size (18 at 1x, crits 1.4x)
+- Gravity: how soon numbers arc back down (0.5 is a soft arc)
+- Spread: random start offset
+- Directional movement / offset: sideways drift (alternating sides) and a higher start
+- Hit height / Crit height: start offset for hits and crits
+- Style: Retail eases numbers in and starts them larger, settling over Ramp duration (Hit/Crit ramp strength set how
+  fast); Classic shows them at once at full size
+- Minimum opacity: a higher value keeps numbers solid longer before they fade
+- Damage over targets off: no numbers, and a note says so
+
+It is labelled an approximation. The real numbers are Blizzard's 3D world text; the wiki lists the CVars but gives no
+formulas, size follows camera distance, and some start-position CVars are not controlled here (`WorldTextNonRandomZ_v2`,
+`WorldTextRandomZMin_v2`, `WorldTextRandomZMax_v2`, `WorldTextRandomXY_v2`). Check the real numbers over a target.
 
 The wiki gives no description for the Pop & Fade CVars; what they do is inferred from their names.
 
@@ -95,5 +107,6 @@ button that shows the GitHub Issues URL to copy. Terms shared with PlateSCT reus
 - `Core.lua`: CVar list, reading/writing, saved variables, slash commands
 - `Locales/`: the language registry and one file per language (see above)
 - `Widgets.lua`: palette, rounded shapes, buttons, sliders, switches, dropdown, style cards, rows (ported from the PlateSCT settings)
+- `Preview.lua`: the damage preview band
 - `Window.lua`: the window
 - `Media/`: rounded-corner texture, icons and Source Sans 3 fonts (SIL OFL, see `Media/Fonts/SourceSans3-OFL.md`), copied from PlateSCT

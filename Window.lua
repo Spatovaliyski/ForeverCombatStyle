@@ -8,7 +8,7 @@ local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 local WINDOW_WIDTH, WINDOW_HEIGHT = 840, 780   -- default size
 local MIN_WIDTH, MIN_HEIGHT = 720, 560           -- smallest size the grip allows
 local SIDEBAR_WIDTH, HEADER_HEIGHT = 200, 64
-local PAGE_TOP = 92
+local PAGE_TOP = 92   -- from the top of the page title to the scrolling page
 local NAV_TOP, NAV_STEP, NAV_HEIGHT = 24, 38, 36
 local UTILITY_STEP, UTILITY_HEIGHT = 32, 30
 local GOLD = C.accent
@@ -302,18 +302,27 @@ local function Build()
     local content = CreateFrame("Frame", nil, frame)
     content:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 0, 0)
     content:SetPoint("BOTTOMRIGHT", -1, 1)
-    frame.pageTitle = W.Text(content, "", 32, -24, 560, C.bright, "semibold", 22)
+    -- The damage preview (Preview.lua): its own band across the top of the content, above every
+    -- page, so it keeps playing whichever page is open. The page title starts below it.
+    frame.preview = NS.Preview.New(content)
+    local band = frame.preview.frame
+    band:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+    band:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
+    band:SetHeight(NS.Preview.HEIGHT)
+    band:Show()
+    local below = NS.Preview.HEIGHT
+    frame.pageTitle = W.Text(content, "", 32, -below - 24, 560, C.bright, "semibold", 22)
     frame.pageTitle:SetWordWrap(false)
     -- The subtitle may wrap onto a second line: translations run longer than the English text.
-    frame.subtitle = W.Text(content, "", 32, -52, nil, C.muted)
-    frame.subtitle:SetPoint("TOPRIGHT", content, "TOPRIGHT", -32, -52)
+    frame.subtitle = W.Text(content, "", 32, -below - 52, nil, C.muted)
+    frame.subtitle:SetPoint("TOPRIGHT", content, "TOPRIGHT", -32, -below - 52)
     frame.pageArea = CreateFrame("Frame", nil, content)
     frame.pageArea:SetClipsChildren(true)
 
-    -- The scrolling page fills the content below the title and subtitle.
+    -- The scrolling page fills the content below the preview, the title and the subtitle.
     function frame:LayoutPages()
         self.pageArea:ClearAllPoints()
-        self.pageArea:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -PAGE_TOP)
+        self.pageArea:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -below - PAGE_TOP)
         self.pageArea:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", 0, 0)
         for _, entry in pairs(self.pages) do entry.view:UpdateScroll() end
     end
@@ -321,6 +330,7 @@ local function Build()
     function frame:Refresh()
         NS.Refresh()
         for _, control in ipairs(self.controls) do control:Refresh() end
+        self.preview.Look()
         for _, layout in ipairs(self.layouts) do layout:Reflow() end
         for _, entry in pairs(self.pages) do entry.view:UpdateScroll() end
     end

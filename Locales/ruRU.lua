@@ -139,3 +139,8 @@ L["Open PlateSCT"] = "Открыть PlateSCT"
 L["Get PlateSCT"] = "Получить PlateSCT"
 L["Installed. Opens its settings."] = "Установлен. Открывает его настройки."
 L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Бесплатно на CurseForge. Работает в Forever, Midnight и Classic."
+
+-- Damage preview
+L["Approximate preview"] = "Примерный предпросмотр"
+L["Training Dummy"] = "Тренировочный манекен"
+L["Damage over targets is off, so no numbers show in game."] = "«Урон над целями» выключен, поэтому в игре числа не показываются."
