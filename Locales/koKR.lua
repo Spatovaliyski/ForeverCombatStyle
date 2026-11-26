@@ -139,3 +139,8 @@ L["Open PlateSCT"] = "PlateSCT 열기"
 L["Get PlateSCT"] = "PlateSCT 받기"
 L["Installed. Opens its settings."] = "설치됨. 설정을 엽니다."
 L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "CurseForge에서 무료. Forever, Midnight, 클래식 지원."
+
+-- Damage preview
+L["Approximate preview"] = "대략적인 미리보기"
+L["Training Dummy"] = "훈련용 허수아비"
+L["Damage over targets is off, so no numbers show in game."] = "'대상 위 피해'가 꺼져 있어 게임에 숫자가 표시되지 않습니다."

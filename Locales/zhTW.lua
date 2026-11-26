@@ -139,3 +139,8 @@ L["Open PlateSCT"] = "開啟 PlateSCT"
 L["Get PlateSCT"] = "取得 PlateSCT"
 L["Installed. Opens its settings."] = "已安裝。點擊開啟其設定。"
 L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "CurseForge 免費下載。支援 Forever、Midnight 和經典版。"
+
+-- Damage preview
+L["Approximate preview"] = "近似預覽"
+L["Training Dummy"] = "訓練假人"
+L["Damage over targets is off, so no numbers show in game."] = "「目標上方傷害」已關閉，遊戲中不會顯示數字。"
