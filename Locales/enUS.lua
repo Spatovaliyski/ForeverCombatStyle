@@ -144,3 +144,16 @@ L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Free on Curs
 L["Approximate preview"] = "Approximate preview"
 L["Training Dummy"] = "Training Dummy"
 L["Damage over targets is off, so no numbers show in game."] = "Damage over targets is off, so no numbers show in game."
+
+-- Settings window
+L["All"] = "All"
+L["Changed"] = "Changed"
+L["Preview"] = "Preview"
+L["Reset"] = "Reset"
+L["Reset to default"] = "Reset to default"
+L["Changed from the default. Right-click to reset."] = "Changed from the default. Right-click to reset."
+L["Put this section back to its defaults."] = "Put this section back to its defaults."
+L["Nothing on this page differs from the defaults."] = "Nothing on this page differs from the defaults."
+L["Show or hide the damage preview."] = "Show or hide the damage preview."
+L["Show only the settings that differ from the defaults."] = "Show only the settings that differ from the defaults."
+L["Settings changed from the default: %d"] = "Settings changed from the default: %d"

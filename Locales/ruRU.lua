@@ -144,3 +144,16 @@ L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Беспла
 L["Approximate preview"] = "Примерный предпросмотр"
 L["Training Dummy"] = "Тренировочный манекен"
 L["Damage over targets is off, so no numbers show in game."] = "«Урон над целями» выключен, поэтому в игре числа не показываются."
+
+-- Settings window
+L["All"] = "Все"
+L["Changed"] = "Изменённые"
+L["Preview"] = "Предпросмотр"
+L["Reset"] = "Сбросить"
+L["Reset to default"] = "Сбросить по умолчанию"
+L["Changed from the default. Right-click to reset."] = "Отличается от значения по умолчанию. Правый щелчок — сбросить."
+L["Put this section back to its defaults."] = "Возвращает этому разделу значения по умолчанию."
+L["Nothing on this page differs from the defaults."] = "На этой странице всё по умолчанию."
+L["Show or hide the damage preview."] = "Показать или скрыть предпросмотр урона."
+L["Show only the settings that differ from the defaults."] = "Показывать только настройки, отличающиеся от значений по умолчанию."
+L["Settings changed from the default: %d"] = "Настроек, отличающихся от значений по умолчанию: %d"

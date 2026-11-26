@@ -144,3 +144,16 @@ L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "CurseForge�
 L["Approximate preview"] = "대략적인 미리보기"
 L["Training Dummy"] = "훈련용 허수아비"
 L["Damage over targets is off, so no numbers show in game."] = "'대상 위 피해'가 꺼져 있어 게임에 숫자가 표시되지 않습니다."
+
+-- Settings window
+L["All"] = "전체"
+L["Changed"] = "변경됨"
+L["Preview"] = "미리보기"
+L["Reset"] = "초기화"
+L["Reset to default"] = "기본값으로 초기화"
+L["Changed from the default. Right-click to reset."] = "기본값과 다릅니다. 오른쪽 클릭하면 초기화됩니다."
+L["Put this section back to its defaults."] = "이 구역을 기본값으로 되돌립니다."
+L["Nothing on this page differs from the defaults."] = "이 페이지에는 기본값과 다른 설정이 없습니다."
+L["Show or hide the damage preview."] = "피해 미리보기를 표시하거나 숨깁니다."
+L["Show only the settings that differ from the defaults."] = "기본값과 다른 설정만 표시합니다."
+L["Settings changed from the default: %d"] = "기본값과 다른 설정: %d"

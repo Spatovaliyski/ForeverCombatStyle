@@ -144,3 +144,16 @@ L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "Gratuit sur 
 L["Approximate preview"] = "Aperçu approximatif"
 L["Training Dummy"] = "Mannequin d'entraînement"
 L["Damage over targets is off, so no numbers show in game."] = "Dégâts sur les cibles est désactivé : aucun nombre ne s'affiche en jeu."
+
+-- Settings window
+L["All"] = "Tous"
+L["Changed"] = "Modifiés"
+L["Preview"] = "Aperçu"
+L["Reset"] = "Réinitialiser"
+L["Reset to default"] = "Rétablir la valeur par défaut"
+L["Changed from the default. Right-click to reset."] = "Différent de la valeur par défaut. Clic droit pour rétablir."
+L["Put this section back to its defaults."] = "Rétablit les valeurs par défaut de cette section."
+L["Nothing on this page differs from the defaults."] = "Rien sur cette page ne diffère des valeurs par défaut."
+L["Show or hide the damage preview."] = "Affiche ou masque l'aperçu des dégâts."
+L["Show only the settings that differ from the defaults."] = "N'affiche que les réglages qui diffèrent des valeurs par défaut."
+L["Settings changed from the default: %d"] = "Réglages différents de la valeur par défaut : %d"

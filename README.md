@@ -3,9 +3,22 @@
 A small WoW Forever addon for tuning the floating damage number CVars.
 Open it with `/fcs` (or `/combatstyle`), or from the addon compartment button.
 
-The window copies the PlateSCT settings layout: a page sidebar on the left (General, Combat, Appearance) with
-Reload UI and Reset Defaults pinned at the bottom, and a scrolling page with a title and subtitle. A PlateSCT-style
-warning at the top of every page notes that this works with Blizzard's own floating text and that no further
+The layout takes its cues from the settings window of [Polestar](https://github.com/fitzforge/polestar), in this
+addon's own colors and code:
+
+- A sidebar with the pages (General, Combat, Appearance), each showing how many of its settings differ from the
+  defaults.
+- A header with the page title and subtitle.
+- A tab per section; clicking one scrolls to it, and the tab of the section in view is underlined. A narrow window or
+  a long translation leaves out the tabs that do not fit.
+- **All / Changed**: "Changed" lists only the page's settings that differ from the defaults. A row stays listed while
+  you edit it, even back to its default.
+- **Preview**: shows or hides the damage preview; the choice is saved.
+- Each section is a card. Its rows stand two a line when the card is at least 600 wide (the default window), one a line
+  below that.
+- A footer with Reload UI and Reset Defaults.
+
+A warning at the top of every page notes that this works with Blizzard's own floating text and that no further
 customisation (fonts, colors, icons) can be added.
 
 ## What it controls
@@ -46,18 +59,21 @@ Spread 1 and Directional movement 1). Reset includes "Your scrolling text", whic
   ease in and settle gradually); Classic is instant and direct. A note under the cards explains that both styles are
   fully tweakable: Size and every Appearance slider apply to whichever style is chosen.
 - Sliders write the CVar as you drag. Click a value to type an exact number; typed values may go past the slider range.
-- Hover a setting for its CVar name.
-- "Re-apply at login" puts your values back if the client resets them.
-- A CVar the client does not know is greyed out instead of raising an error.
-- "Reload UI" is in the sidebar in case a change does not show up in game.
+- Every option has a line under it saying what it does. Hover a setting for its CVar name.
+- A setting that differs from its default has a gold dot. Click the dot, or right-click the setting, to put it back;
+  a section's Reset button puts back everything changed in it.
+- "Re-apply at login" puts your values back if the client resets them. A setting you reset on its own or by section is
+  no longer re-applied.
+- A CVar the client does not know is greyed out, with a note, instead of raising an error.
+- "Reload UI" is in the footer in case a change does not show up in game.
 - Drag the window's bottom-right corner to resize it (720x560 up to the screen size); double-click the corner to
-  restore the default size. The size is saved, and the window scales down on small screens.
+  restore the default size (1000x780). The size is saved, and the window scales down on small screens.
 - `/fcs debug` prints, for every CVar the addon controls (and a few start-position CVars it does not), the live
   value, the client's default and the fallback default, then how a few labels are being drawn (for diagnosing blank text).
 
 ## Damage preview
 
-An animated band across the top of the window's content, above every page (so it keeps playing on any tab), shows a
+An animated band between the section tabs and the page (so it keeps playing on every page, unless switched off) shows a
 training dummy with numbers popping off it every half second (every fourth one a crit), drawn in the game's damage
 font (`DAMAGE_TEXT_FONT`). It follows the live CVars, including while a slider is dragged:
 
@@ -106,7 +122,8 @@ button that shows the GitHub Issues URL to copy. Terms shared with PlateSCT reus
 
 - `Core.lua`: CVar list, reading/writing, saved variables, slash commands
 - `Locales/`: the language registry and one file per language (see above)
-- `Widgets.lua`: palette, rounded shapes, buttons, sliders, switches, dropdown, style cards, rows (ported from the PlateSCT settings)
+- `Widgets.lua`: palette, rounded shapes, buttons, sliders, switches, dropdown, style cards (shapes and controls from
+  the PlateSCT settings) and the layout of section cards and rows
 - `Preview.lua`: the damage preview band
-- `Window.lua`: the window
+- `Window.lua`: the window (sidebar, header, section tabs, filter, footer)
 - `Media/`: rounded-corner texture, icons and Source Sans 3 fonts (SIL OFL, see `Media/Fonts/SourceSans3-OFL.md`), copied from PlateSCT
