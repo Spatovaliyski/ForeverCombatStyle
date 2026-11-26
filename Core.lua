@@ -295,6 +295,33 @@ function NS.Resync()
     if NS.RefreshWindow then NS.RefreshWindow() end
 end
 
+-- True when a CVar the client knows differs from the default it reports.
+function NS.IsChanged(cvar)
+    local setting = NS.BY_CVAR[cvar]
+    if not setting or not NS.available[cvar] then
+        return false
+    end
+    local default = NS.defaults[cvar] or setting.default
+    return abs((NS.values[cvar] or default) - default) > 1e-4
+end
+
+-- Put the listed CVars back to their defaults, and stop re-applying them at login.
+function NS.ResetSettings(cvars)
+    for _, cvar in ipairs(cvars) do
+        local setting = NS.BY_CVAR[cvar]
+        if setting and NS.available[cvar] then
+            local default = NS.defaults[cvar] or setting.default
+            if WriteCVar(cvar, FormatNumber(default)) then
+                NS.values[cvar] = tonumber(ReadCVar(cvar)) or default
+                if NS.db then
+                    NS.db.values[cvar] = nil
+                end
+                Notify(cvar, NS.values[cvar])
+            end
+        end
+    end
+end
+
 -- Back to the defaults the client reports (the table's values where it cannot say).
 function NS.Reset()
     for _, setting in ipairs(NS.SETTINGS) do

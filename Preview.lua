@@ -1,5 +1,5 @@
--- Forever Combat Style: the damage preview, a band of its own across the top of the window's
--- content, above every page, so it keeps playing whichever page is open.
+-- Forever Combat Style: the damage preview, a band of its own between the section tabs and the
+-- page, so it keeps playing whichever page is open (the window's Preview switch hides it).
 -- A training dummy with numbers popping off it, driven by one OnUpdate. Font strings are recycled,
 -- and a text size is only set when a number is spawned. Each of this addon's CVars moves one part
 -- of the motion. It is an approximation: the game's numbers are 3D world text with no published
@@ -12,7 +12,7 @@ local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 local P = {}
 NS.Preview = P
 
-P.HEIGHT = 136        -- band height in the window
+P.HEIGHT = 168        -- band height in the window
 P.EVERY = 0.5         -- seconds between numbers
 P.SIZE = 18           -- a normal hit's text size at Size 1
 P.CRIT = 1.4          -- crit text size, times a hit's
@@ -69,7 +69,7 @@ function P.New(parent)
     rule:SetHeight(1)
     rule:SetPoint("BOTTOMLEFT"); rule:SetPoint("BOTTOMRIGHT")
 
-    local caption = W.Text(f, L["Approximate preview"], 32, -12, nil, C.dim, "regular", 12)
+    local caption = W.Text(f, L["Approximate preview"], 24, -10, nil, C.dim, "regular", 12)
     caption:SetWordWrap(false)
 
     local dummy = CreateFrame("Frame", nil, f)

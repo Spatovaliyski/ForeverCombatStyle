@@ -144,3 +144,16 @@ L["Free on CurseForge. Works on Forever, Midnight and Classic."] = "CurseForge �
 L["Approximate preview"] = "近似预览"
 L["Training Dummy"] = "训练假人"
 L["Damage over targets is off, so no numbers show in game."] = "“目标上方伤害”已关闭，游戏中不会显示数字。"
+
+-- Settings window
+L["All"] = "全部"
+L["Changed"] = "已更改"
+L["Preview"] = "预览"
+L["Reset"] = "重置"
+L["Reset to default"] = "恢复默认值"
+L["Changed from the default. Right-click to reset."] = "与默认值不同。右键点击可重置。"
+L["Put this section back to its defaults."] = "将此分区恢复为默认值。"
+L["Nothing on this page differs from the defaults."] = "本页没有与默认值不同的设置。"
+L["Show or hide the damage preview."] = "显示或隐藏伤害预览。"
+L["Show only the settings that differ from the defaults."] = "仅显示与默认值不同的设置。"
+L["Settings changed from the default: %d"] = "与默认值不同的设置：%d"

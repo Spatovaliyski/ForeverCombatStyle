@@ -1,5 +1,6 @@
--- Forever Combat Style: widget library. A trimmed port of the PlateSCT settings look:
--- warm near-black surfaces, one gold accent, rounded shapes, Source Sans 3 text.
+-- Forever Combat Style: widget library. Shapes and controls come from the PlateSCT settings:
+-- warm near-black surfaces, one gold accent, rounded shapes, Source Sans 3 text. Pages are laid
+-- out as section cards of compact rows, in two columns when there is room.
 local ADDON_NAME, NS = ...
 local W = {}
 NS.W = W
@@ -10,8 +11,6 @@ local WHITE = "Interface\\Buttons\\WHITE8X8"
 local ROUND = MEDIA .. "UI\\Round.png"
 local CONTROL_WIDTH = 220
 local CONTROL_HEIGHT = 32
-local ROW_PAD = 12
-local ROW_MINIMUM = 48
 
 local C = {
     window = { 0.071, 0.063, 0.051, 1 },
@@ -30,11 +29,16 @@ local C = {
     menuHover = { 0.165, 0.141, 0.106, 1 },
     card = { 0.090, 0.078, 0.059, 1 },
     cardHover = { 0.106, 0.094, 0.071, 1 },
-    cardSelected = { 0.110, 0.094, 0.063, 1 },
+    cardSelected = { 0.137, 0.114, 0.071, 1 },
     accent = { 0.851, 0.682, 0.373, 1 },
     accentHover = { 0.902, 0.741, 0.439, 1 },
     accentDown = { 0.722, 0.573, 0.306, 1 },
     accentSoft = { 0.851, 0.682, 0.373, 0.55 },
+    -- Gold fading out: the selected sidebar row, the header's glow and the rim along the top.
+    wash = { 0.851, 0.682, 0.373, 0.17 },
+    glow = { 0.851, 0.682, 0.373, 0.07 },
+    rim = { 0.851, 0.682, 0.373, 0.75 },
+    clear = { 0.851, 0.682, 0.373, 0 },
     onAccent = { 0, 0, 0 },
     text = { 0.929, 0.902, 0.847 },
     bright = { 0.945, 0.918, 0.863 },
@@ -116,7 +120,7 @@ do
         end
     end
     for _, path in pairs(CJK_FONTS) do
-        for _, size in ipairs({ 13, 14, 15, 22 }) do
+        for _, size in ipairs({ 12, 13, 14, 15, 16, 22 }) do
             local probe = loader:CreateFontString(nil, "ARTWORK")
             pcall(probe.SetFont, probe, path, size, "")
             probe:SetText("Aa")
@@ -278,6 +282,14 @@ local function Gradient(texture, left, right)
     texture:SetVertexColor(middle[1], middle[2], middle[3], middle[4])
 end
 
+-- A texture of its own filled with that gradient.
+function W.Fade(parent, left, right, layer)
+    local texture = parent:CreateTexture(nil, layer or "BORDER")
+    texture:SetTexture(WHITE)
+    Gradient(texture, left, right)
+    return texture
+end
+
 -- Paint a rounded fill running from `from` (left edge) to `to` (right edge) across `width`, with
 -- an optional ring. The corners take the color at their position; the strips carry the gradient.
 function W.PaintGradient(frame, from, to, width, radius, ring)
@@ -360,6 +372,13 @@ function W.Text(parent, text, x, y, width, color, role, size)
     return label
 end
 
+-- The width of a label's whole text, even while its region is too narrow to show all of it
+-- (a button about to be fitted to its label).
+function W.TextWidth(region)
+    if region.GetUnboundedStringWidth then return region:GetUnboundedStringWidth() or 0 end
+    return region:GetStringWidth() or 0
+end
+
 -- Supporting text under a label: one step smaller than the label.
 function W.SetSmall(region)
     W.SetFont(region, region.optionsRole or "regular", 13)
@@ -391,7 +410,8 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- Buttons. Styles: "action" (gold pill), "flat" (filled field), "nav" (sidebar page),
--- "utility" (quiet sidebar link), "ghost" (no fill until hovered), "segment" (tab/segment).
+-- "tab" (section tab, underlined when selected), "ghost" (no fill until hovered),
+-- "segment" (one of a segmented control), "menu" (dropdown entry).
 ---------------------------------------------------------------------------------------------------
 
 local ACTION_FACES = {
@@ -432,18 +452,21 @@ local function PaintButton(button)
         fill = selected and C.selected or over and C.navActive or nil
         text = selected and C.accent or over and C.bright or C.muted
     elseif style == "nav" then
-        fill = selected and C.navActive or over and C.hover or nil
-        text = selected and C.accent or over and C.bright or C.navText
+        fill = not selected and over and C.hover or nil
+        text = (selected or over) and C.bright or C.navText
         icon = selected and C.accent or over and C.navText or C.dim
-    else -- utility, ghost
-        fill = selected and C.navActive or over and C.hover or nil
+    elseif style == "tab" then
+        text = (selected or over) and C.bright or C.muted
+    else -- ghost
+        fill = selected and C.navActive or over and C.fieldHover or nil
         text = selected and C.accent or over and C.bright or C.muted
         icon = text
     end
     if fill then W.Paint(button, fill, button.optionsRadius or 8) else W.Unpaint(button) end
     local font = button:GetFontString()
     if font then font:SetTextColor(RGB(text)) end
-    if button.optionsIcon and icon then button.optionsIcon:SetVertexColor(RGB(icon)) end
+    if button.optionsIcon then button.optionsIcon:SetVertexColor(RGB(icon or text)) end
+    for _, region in ipairs(button.optionsSelection or {}) do region:SetShown(selected and true or false) end
 end
 W.PaintButton = PaintButton
 
@@ -459,13 +482,13 @@ function W.Button(parent, label, width, height, onClick, style)
     button.optionsStyle = style
     -- No Blizzard font template: the client can reapply template colors after PaintButton runs.
     local font = button:CreateFontString(nil, "OVERLAY")
-    W.SetFont(font, (style == "action") and "semibold"
-        or (style == "utility" or style == "menu") and "regular" or "medium", 14)
+    W.SetFont(font, (style == "action") and "semibold" or (style == "menu") and "regular" or "medium",
+        (style == "ghost") and 13 or 14)
     button:SetFontString(font)
     button:SetText(label or "")
     font:ClearAllPoints()
-    local centered = style == "action" or style == "segment" or style == "flat"
-    local inset = centered and 14 or 12
+    local centered = style ~= "nav" and style ~= "menu"
+    local inset = style == "action" and 14 or style == "segment" and 4 or centered and 10 or 12
     font:SetPoint("LEFT", inset, 0)
     font:SetPoint("RIGHT", -inset, 0)
     font:SetJustifyH(centered and "CENTER" or "LEFT")
@@ -498,16 +521,65 @@ function W.Button(parent, label, width, height, onClick, style)
     return button
 end
 
--- Sidebar page with a leading icon.
-function W.NavButton(parent, label, icon, width, height, onClick, style)
-    local button = W.Button(parent, label, width, height, onClick, style or "nav")
-    local iconSize = button.optionsStyle == "nav" and 16 or 15
-    button.optionsIcon = W.Icon(button, icon, iconSize)
-    button.optionsIcon:SetPoint("LEFT", 10, 0)
+-- The width a button needs for its label, with `extra` around it.
+function W.FitButton(button, extra, minimum)
+    local width = math.max(minimum or 0, math.ceil(W.TextWidth(button:GetFontString()) + extra))
+    button:SetWidth(width)
+    return width
+end
+
+-- Sidebar page: a full-width row with a leading icon and, at the right, a small count (`count`).
+-- The selected row has a gold bar at the window's edge and a gold wash fading out to the right.
+function W.NavButton(parent, label, icon, width, height, onClick)
+    local button = W.Button(parent, label, width, height, onClick, "nav")
+    button.optionsRadius = 0
+    local wash = W.Fade(button, C.wash, C.clear)
+    wash:SetPoint("TOPLEFT"); wash:SetPoint("BOTTOMLEFT")
+    wash:SetWidth(math.floor(width * 0.9))
+    local bar = button:CreateTexture(nil, "ARTWORK")
+    bar:SetColorTexture(RGB(GOLD))
+    bar:SetWidth(2)
+    bar:SetPoint("TOPLEFT"); bar:SetPoint("BOTTOMLEFT")
+    button.optionsSelection = { wash, bar }
+    button.optionsIcon = W.Icon(button, icon, 16)
+    button.optionsIcon:SetPoint("LEFT", 22, 0)
+    button.count = W.Text(button, "", 0, 0, 28, C.muted, "medium", 13)
+    button.count:ClearAllPoints()
+    button.count:SetPoint("RIGHT", button, "RIGHT", -18, 0)
+    button.count:SetJustifyH("RIGHT")
+    button.count:SetWordWrap(false)
     local font = button:GetFontString()
     font:ClearAllPoints()
-    font:SetPoint("LEFT", 36, 0)
-    font:SetPoint("RIGHT", -8, 0)
+    font:SetPoint("LEFT", 50, 0)
+    font:SetPoint("RIGHT", -48, 0)
+    PaintButton(button)
+    return button
+end
+
+-- A section tab: its label, underlined in gold while its section is in view.
+function W.TabButton(parent, height, onClick)
+    local button = W.Button(parent, "", 60, height, onClick, "tab")
+    local line = button:CreateTexture(nil, "ARTWORK")
+    line:SetColorTexture(RGB(GOLD))
+    line:SetHeight(2)
+    line:SetPoint("BOTTOMLEFT", 10, 0); line:SetPoint("BOTTOMRIGHT", -10, 0)
+    button.optionsSelection = { line }
+    PaintButton(button)
+    return button
+end
+
+-- A field button with a leading icon, as wide as its label needs (`Fit`).
+function W.IconButton(parent, label, icon, onClick)
+    local button = W.Button(parent, label, 140, 30, onClick, "flat")
+    button.optionsIcon = W.Icon(button, icon, 14)
+    button.optionsIcon:SetPoint("LEFT", 12, 0)
+    local font = button:GetFontString()
+    font:ClearAllPoints()
+    font:SetPoint("LEFT", 34, 0)
+    font:SetPoint("RIGHT", -12, 0)
+    font:SetJustifyH("LEFT")
+    function button:Fit() return W.FitButton(self, 48) end
+    button:Fit()
     PaintButton(button)
     return button
 end
@@ -670,7 +742,7 @@ local function OpenMenu(control)
         entry:ClearAllPoints()
         entry:SetPoint("TOPLEFT", 0, -(index - 1) * MENU_ROW)
         entry:Show()
-        width = math.max(width, (entry:GetFontString():GetStringWidth() or 0) + 60)
+        width = math.max(width, W.TextWidth(entry:GetFontString()) + 60)
     end
     -- Long names widen the popup, within the screen.
     local screenWidth = UIParent:GetWidth() / menu.layer:GetScale()
@@ -705,14 +777,17 @@ local function OpenMenu(control)
 end
 
 ---------------------------------------------------------------------------------------------------
--- Scroll view: a page that scrolls with the wheel and a slim thumb.
+-- Scroll view: a page that scrolls with the wheel and a slim thumb. `host.OnScroll`, when set,
+-- is called after every scroll or size change.
 ---------------------------------------------------------------------------------------------------
+
+W.SCROLL_ROOM = 18   -- the strip at the right of a page that holds the thumb
 
 function W.ScrollView(parent, root)
     local host = CreateFrame("Frame", nil, parent)
     host:SetAllPoints(); host:Hide()
     local scroll = CreateFrame("ScrollFrame", nil, host)
-    scroll:SetPoint("TOPLEFT"); scroll:SetPoint("BOTTOMRIGHT", -18, 0)
+    scroll:SetPoint("TOPLEFT"); scroll:SetPoint("BOTTOMRIGHT", -W.SCROLL_ROOM, 0)
     scroll:EnableMouseWheel(true)
     local child = CreateFrame("Frame", nil, scroll)
     child:SetSize(598, 1)
@@ -731,10 +806,12 @@ function W.ScrollView(parent, root)
         local position = math.min(maximum, math.max(0, scroll:GetVerticalScroll()))
         if position ~= scroll:GetVerticalScroll() then scroll:SetVerticalScroll(position) end
         track:SetShown(maximum > 0 and height > 0)
-        if maximum <= 0 or height <= 0 then return end
-        local size = math.min(height, math.max(28, height * scroll:GetHeight() / child:GetHeight()))
-        thumb:SetHeight(size); thumb:ClearAllPoints()
-        thumb:SetPoint("TOP", track, "TOP", 0, -(height - size) * position / maximum)
+        if maximum > 0 and height > 0 then
+            local size = math.min(height, math.max(28, height * scroll:GetHeight() / child:GetHeight()))
+            thumb:SetHeight(size); thumb:ClearAllPoints()
+            thumb:SetPoint("TOP", track, "TOP", 0, -(height - size) * position / maximum)
+        end
+        if host.OnScroll then host.OnScroll(position, maximum) end
     end
     local function SetScroll(value)
         scroll:SetVerticalScroll(math.min(MaxScroll(), math.max(0, value)))
@@ -766,12 +843,31 @@ function W.ScrollView(parent, root)
     host:SetScript("OnHide", function() thumb:SetScript("OnUpdate", nil) end)
     host.scroll, host.child, host.UpdateScroll = scroll, child, Update
     host.SetScroll = function(_, value) SetScroll(value) end
+    host.MaxScroll = MaxScroll
     return host
 end
 
 ---------------------------------------------------------------------------------------------------
--- Layout: headings and rows (label + control) on a scrolling page. Descriptions are tooltips.
+-- Layout: section cards of compact rows on a scrolling page, two rows a line when the card is
+-- wide enough. A row says what its setting does, under the caption and the control. A setting that
+-- differs from the client's default has a gold mark that puts it back (so does a right-click), and
+-- its card a Reset button.
 ---------------------------------------------------------------------------------------------------
+
+local ACTION_HEIGHT = 46              -- the least a row with an action button takes
+local ROW_PAD, ROW_GAP = 12, 4        -- above and below a row's contents; over its description
+local ROW_LEFT, ROW_RIGHT = 18, 16    -- the row's inner edges; the changed mark sits in the left one
+local VALUE_WIDTH = 44                -- a slider's readout
+local SEGMENT_PAD = 10                -- around a segment's label
+local CAPTION_MIN = 70                -- the least a wide control leaves its caption
+local HALVES_MIN = 600                -- card width from which rows stand two a line
+local CARD_HEADER, CARD_FOOT = 40, 6
+local PAGE_TOP, PAGE_BOTTOM = 16, 24
+local CARD_SPACE = 14
+
+local function Clamp(value, low, high)
+    return math.max(low, math.min(high, value))
+end
 
 local function FormatValue(setting, value)
     return string.format("%." .. (setting.decimals or 2) .. "f", value)
@@ -781,31 +877,38 @@ end
 function W.WarningBox(parent, text, width)
     local box = CreateFrame("Frame", nil, parent)
     box:SetSize(width, 40)
-    W.Paint(box, C.warning, 8)
+    W.Paint(box, C.warning, 10)
     local icon = W.Icon(box, "Warning", 16, C.warningIcon)
-    icon:SetPoint("TOPLEFT", 14, -13)
-    local label = W.Text(box, text, 40, -12, width - 54, C.warningText, "regular", 14)
-    box:SetHeight(math.max(18, label:GetStringHeight()) + 24)
+    icon:SetPoint("TOPLEFT", ROW_LEFT - 2, -12)
+    local label = W.SetSmall(W.Text(box, text, 44, -11, width - 60, C.warningText))
+    box:SetHeight(math.max(18, label:GetStringHeight()) + 22)
     return box, label
 end
 
--- opts: width (initial column width), padLeft, padRight, controlWidth
+-- opts: width (initial column width), padLeft, padRight
 function W.NewLayout(parent, root, opts)
     opts = opts or {}
-    local PAD_LEFT, PAD_RIGHT = opts.padLeft or 32, opts.padRight or 14
-    local CONTROL = opts.controlWidth or CONTROL_WIDTH
-    local layout = { parent = parent, root = root, x = PAD_LEFT, rows = {},
-        width = math.max(200, (opts.width or parent:GetWidth()) - PAD_LEFT - PAD_RIGHT) }
+    local PAD_LEFT, PAD_RIGHT = opts.padLeft or 24, opts.padRight or 6
+    local layout = { parent = parent, root = root, x = PAD_LEFT, rows = {}, blocks = {}, cards = {},
+        sections = {}, width = math.max(200, (opts.width or parent:GetWidth()) - PAD_LEFT - PAD_RIGHT) }
 
-    local function ControlWidth(total)
-        return math.min(CONTROL, math.floor(total * 0.6))
-    end
-
+    -- A row joins the open section's card. A warning, an advert or the empty note stands on the
+    -- page itself, and ends the section.
     function layout:AddRow(row, caption, kind)
         row.layoutCaption, row.layoutKind = caption, kind
-        row.layoutGap = (kind == "heading" and #self.rows > 0) and 28 or 0
-        row.layoutWhen = self.condition
+        row.layoutWhen, row.layoutAlways = self.condition, self.always
         self.rows[#self.rows + 1] = row
+        if row:GetParent() == parent then
+            self.card = nil
+            self.blocks[#self.blocks + 1] = row
+        else
+            self.card.rows[#self.card.rows + 1] = row
+        end
+    end
+
+    -- Where the next row is made: in the open section's card, else on the page.
+    local function Host()
+        return layout.card or parent
     end
 
     -- Rows added inside `build` show only while `predicate()` is true; checked on every reflow.
@@ -816,66 +919,145 @@ function W.NewLayout(parent, root, opts)
         self.condition = outer
     end
 
-    function layout:Heading(text)
-        local row = CreateFrame("Frame", nil, parent)
-        row:SetSize(self.width, 28)
-        local label = W.Text(row, text, 0, -2, self.width, GOLD, "semibold", 15)
-        local line = row:CreateTexture(nil, "ARTWORK")
-        line:SetPoint("BOTTOMLEFT", 0, 2)
-        line:SetPoint("BOTTOMRIGHT", 0, 2)
-        line:SetHeight(1)
-        line:SetColorTexture(RGB(C.line))
-        self:AddRow(row, label, "heading")
-        return label
+    -- Rows added inside `build` stay when the page shows only the changed settings.
+    function layout:Always(build)
+        local outer = self.always
+        self.always = true
+        build()
+        self.always = outer
     end
 
-    -- A warning under the settings it concerns; sits a little below the previous row.
+    -- Put the settings of a card that differ from their defaults back.
+    local function ResetCard(card)
+        local list = {}
+        for _, row in ipairs(card.rows) do
+            if row.layoutSetting and NS.IsChanged(row.layoutSetting.cvar) then
+                list[#list + 1] = row.layoutSetting.cvar
+            end
+        end
+        NS.ResetSettings(list)
+        for _, row in ipairs(card.rows) do
+            if row.layoutSetting then row.layoutControl:Refresh() end
+        end
+    end
+
+    -- A section: a card with its title, and a Reset while something in it differs.
+    function layout:Section(text)
+        local card = CreateFrame("Frame", nil, parent)
+        card:SetSize(self.width, CARD_HEADER)
+        W.Paint(card, C.card, 10, C.line)
+        card.isCard, card.rows, card.rules = true, {}, {}
+        card.title = W.Text(card, text, ROW_LEFT, -12, nil, GOLD, "semibold", 15)
+        card.title:SetWordWrap(false)
+        local line = W.Line(card, C.line, "ARTWORK")
+        line:SetHeight(1)
+        line:SetPoint("TOPLEFT", 1, -CARD_HEADER)
+        line:SetPoint("TOPRIGHT", -1, -CARD_HEADER)
+        card.reset = W.Button(card, L["Reset"], 64, 26, function() ResetCard(card) end, "ghost")
+        card.reset.optionsRadius = 7
+        card.reset:SetPoint("TOPRIGHT", -8, -7)
+        card.reset:Hide()
+        W.Tooltip(card.reset, L["Put this section back to its defaults."])
+        self.card = card
+        self.cards[#self.cards + 1] = card
+        self.blocks[#self.blocks + 1] = card
+        return card.title
+    end
+
+    -- A warning on the page, above the sections it concerns.
     function layout:Warning(text)
         local box, label = W.WarningBox(parent, text, self.width)
         self:AddRow(box, label, "warning")
-        box.layoutGap = 16
         return label
     end
 
-    -- Small supporting text on its own row, under the heading it belongs to.
+    -- Shown in place of the sections while only changed settings are listed and none is.
+    function layout:Empty(text)
+        local box = CreateFrame("Frame", nil, parent)
+        box:SetSize(self.width, 96)
+        W.Paint(box, C.card, 10, C.line)
+        local label = W.Text(box, text, 0, 0, self.width - 32, MUTED)
+        label:ClearAllPoints()
+        label:SetPoint("CENTER", box, "CENTER", 0, 0)
+        label:SetJustifyH("CENTER")
+        box.layoutCaption, box.layoutKind = label, "empty"
+        box:Hide()
+        self.empty = box
+        return label
+    end
+
+    -- Small supporting text across a section.
     function layout:Note(text)
-        local row = CreateFrame("Frame", nil, parent)
+        local row = CreateFrame("Frame", nil, Host())
         row:SetSize(self.width, 28)
-        local label = W.SetSmall(W.Text(row, text, 0, -2, self.width, MUTED))
+        local label = W.SetSmall(W.Text(row, text, ROW_LEFT, -8, self.width - ROW_LEFT - ROW_RIGHT, MUTED))
         self:AddRow(row, label, "note")
         return label
     end
 
-    -- A row: caption and a one-line description on the left, the control on the right.
+    -- A row: caption on the left, the control on the right, and under both what the setting does.
     function layout:NewRow(label, tip)
-        local row = CreateFrame("Frame", nil, parent)
-        row:SetSize(self.width, ROW_MINIMUM)
+        local row = CreateFrame("Frame", nil, Host())
+        row:SetSize(self.width, ACTION_HEIGHT)
         row:EnableMouse(true)
-        local rule = row:CreateTexture(nil, "BACKGROUND")
-        rule:SetHeight(1)
-        rule:SetPoint("BOTTOMLEFT"); rule:SetPoint("BOTTOMRIGHT")
-        rule:SetColorTexture(RGB(C.rule))
-        local controlWidth = ControlWidth(self.width)
-        local textWidth = self.width - controlWidth - 24
-        local caption = W.Text(row, label, 0, -ROW_PAD, textWidth, TEXT, "medium", 14)
-        local description = W.SetSmall(W.Text(row, tip or "", 0, 0, textWidth, MUTED))
+        local caption = W.Text(row, label, ROW_LEFT, -ROW_PAD, nil, TEXT, "medium", 14)
+        local description = W.SetSmall(W.Text(row, tip or "", ROW_LEFT, 0, self.width - ROW_LEFT - ROW_RIGHT, MUTED))
         row.layoutDescription, row.tip = description, tip
-        row.minimumHeight = ROW_MINIMUM
         self:AddRow(row, caption, "control")
-        return row, caption, controlWidth
+        return row, caption
     end
 
-    -- The CVar name stays in a tooltip; the description is already written under the label.
-    local function Register(control, row, setting)
+    -- Tie a control to a CVar: its row's tooltip, changed mark and right-click reset.
+    local function Bind(control, row, setting)
         control.row, control.setting = row, setting
-        row.layoutControl = control
+        row.layoutControl, row.layoutSetting = control, setting
         root.controls[#root.controls + 1] = control
-        local function Tip()
-            local note = (not NS.available[setting.cvar]) and L["Not available on this client."] or nil
-            return { title = L[setting.label], body = note, foot = setting.cvar }
+
+        function control:ResetSetting()
+            if not NS.IsChanged(setting.cvar) then return end
+            NS.ResetSettings({ setting.cvar })
+            self:Refresh()
         end
+
+        local mark = CreateFrame("Button", nil, row)
+        mark:SetSize(16, 16)
+        mark.dot = Circle(mark, 6, GOLD, "ARTWORK")
+        mark.dot:SetPoint("CENTER")
+        mark.icon = W.Icon(mark, "Reset", 13, GOLD, "OVERLAY")
+        mark.icon:SetPoint("CENTER")
+        mark.icon:Hide()
+        mark:SetScript("OnEnter", function(self) self.dot:Hide(); self.icon:Show() end)
+        mark:SetScript("OnLeave", function(self) self.dot:Show(); self.icon:Hide() end)
+        mark:SetScript("OnClick", function() control:ResetSetting() end)
+        mark:Hide()
+        W.Tooltip(mark, L["Reset to default"])
+        row.layoutMark = mark
+    end
+
+    local function RightClickResets(frame, control)
+        Hook(frame, "OnMouseUp", function(_, button)
+            if button == "RightButton" then control:ResetSetting() end
+        end)
+    end
+
+    -- The description is written in the row; the tooltip adds the CVar name and the setting's state.
+    local function SettingTip(setting)
+        local note
+        if not NS.available[setting.cvar] then
+            note = L["Not available on this client."]
+        elseif NS.IsChanged(setting.cvar) then
+            note = L["Changed from the default. Right-click to reset."]
+        end
+        return { title = L[setting.label], body = note, foot = setting.cvar }
+    end
+
+    local function Register(control, row, setting)
+        Bind(control, row, setting)
+        local function Tip() return SettingTip(setting) end
         W.Tooltip(row, Tip)
         W.Tooltip(control, Tip)
+        RightClickResets(row, control)
+        RightClickResets(control, control)
     end
 
     local function SetControlEnabled(control, enabled)
@@ -894,18 +1076,18 @@ function W.NewLayout(parent, root, opts)
         local available = NS.available[control.setting.cvar] and true or false
         local row = control.row
         row.layoutDescription:SetText(available and (row.tip or "") or L["This setting is not available on this client."])
-        control.row.layoutCaption:SetTextColor(RGB(available and TEXT or C.disabledText))
+        row.layoutCaption:SetTextColor(RGB(available and TEXT or C.disabledText))
         control:SetAlpha(available and 1 or 0.45)
         SetControlEnabled(control, available)
         return available
     end
 
     function layout:Slider(setting)
-        local row, caption, controlWidth = self:NewRow(L[setting.label], L[setting.tip])
+        local row = self:NewRow(L[setting.label], L[setting.tip])
         local minimum, maximum, step = setting.min, setting.max, setting.step
         local control = CreateFrame("Slider", nil, row)
         control:SetOrientation("HORIZONTAL")
-        control:SetSize(controlWidth - 64, 20)
+        control:SetSize(140, 20)
         control:SetMinMaxValues(minimum, maximum)
         control:SetValueStep(step)
         if control.SetObeyStepOnDrag then control:SetObeyStepOnDrag(true) end
@@ -924,9 +1106,9 @@ function W.NewLayout(parent, root, opts)
         fill:SetPoint("TOPLEFT"); fill:SetPoint("BOTTOMLEFT")
         W.Paint(fill, GOLD, 2)
         control.rail, control.fill = rail, fill
-        local valueText = W.Text(row, "", 0, 0, 52, C.bright, "medium", 14)
+        local valueText = W.Text(row, "", 0, 0, VALUE_WIDTH, C.bright, "medium", 14)
         valueText:ClearAllPoints()
-        valueText:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, -ROW_PAD)
+        valueText:SetPoint("RIGHT", row, "RIGHT", -ROW_RIGHT, 0)
         valueText:SetJustifyH("RIGHT")
         valueText:SetWordWrap(false)
         control.valueText = valueText
@@ -950,16 +1132,16 @@ function W.NewLayout(parent, root, opts)
         end
 
         -- Clicking the readout types an exact value. It may go past the slider's drag range.
-        local edit = W.EditBox(row, 68, 28)
-        edit:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, -(ROW_PAD - 2))
+        local edit = W.EditBox(row, 60, 28)
+        edit:SetPoint("RIGHT", valueText, "RIGHT", 8, 0)
         edit:SetJustifyH("RIGHT")
         edit:SetMaxLetters(8)
         edit:Hide()
         local entry = CreateFrame("Button", nil, row)
-        entry:SetPoint("TOPRIGHT", valueText, "TOPRIGHT", 4, 4)
-        entry:SetSize(56, 22)
+        entry:SetPoint("RIGHT", valueText, "RIGHT", 4, 0)
+        entry:SetSize(VALUE_WIDTH + 8, 24)
         local underline = entry:CreateTexture(nil, "ARTWORK")
-        underline:SetPoint("BOTTOMLEFT", 4, 2); underline:SetPoint("BOTTOMRIGHT", -4, 2)
+        underline:SetPoint("BOTTOMLEFT", 4, 1); underline:SetPoint("BOTTOMRIGHT", -4, 1)
         underline:SetHeight(1); underline:SetColorTexture(RGB(GOLD)); underline:Hide()
         entry:SetScript("OnEnter", function()
             if control:IsEnabled() then valueText:SetTextColor(RGB(GOLD)); underline:Show() end
@@ -1018,32 +1200,51 @@ function W.NewLayout(parent, root, opts)
 
     -- Two or three exact choices as a segmented control.
     function layout:Segments(setting)
-        local row, caption, controlWidth = self:NewRow(L[setting.label], L[setting.tip])
+        local row = self:NewRow(L[setting.label], L[setting.tip])
         local control = CreateFrame("Frame", nil, row)
-        control:SetHeight(36)
-        W.Paint(control, C.field, 9)
+        control:SetHeight(32)
+        W.Paint(control, C.window, 8, C.line)
         control.layoutType = "segments"
         control.segments = {}
         Register(control, row, setting)
         for _, option in ipairs(setting.options) do
             local value = option[1]
-            local segment = W.Button(control, L[option[2]], 60, 30, function()
+            local segment = W.Button(control, L[option[2]], 60, 26, function()
                 if NS.available[setting.cvar] then
                     NS.Set(setting.cvar, value)
                     control:Refresh()
                 end
             end, "segment")
-            segment.optionsRadius = 7
+            segment.optionsRadius = 6
             segment.value = value
+            RightClickResets(segment, control)
             control.segments[#control.segments + 1] = segment
         end
-        function control:Fit(width)
-            local count = #self.segments
-            local each = math.floor((width - 6 - 2 * (count - 1)) / count)
+        -- What each label asks for, all of them together, and the longest.
+        local function Wanted(self)
+            local wanted, total, widest = {}, 0, 0
             for index, segment in ipairs(self.segments) do
+                wanted[index] = math.ceil(W.TextWidth(segment:GetFontString())) + SEGMENT_PAD
+                total, widest = total + wanted[index], math.max(widest, wanted[index])
+            end
+            return wanted, total, widest
+        end
+        -- The narrowest the control can be with no label cut short.
+        function control:Needed()
+            local _, total = Wanted(self)
+            return total + 6 + 2 * (#self.segments - 1)
+        end
+        -- Equal segments when the longest label fits one, else the width shared by label length.
+        function control:Fit(width)
+            local usable = width - 6 - 2 * (#self.segments - 1)
+            local wanted, total, widest = Wanted(self)
+            local equal, x = math.floor(usable / #self.segments), 3
+            for index, segment in ipairs(self.segments) do
+                local each = widest <= equal and equal or math.floor(wanted[index] * usable / total)
                 segment:ClearAllPoints()
-                segment:SetPoint("LEFT", self, "LEFT", 3 + (index - 1) * (each + 2), 0)
+                segment:SetPoint("LEFT", self, "LEFT", x, 0)
                 segment:SetWidth(each)
+                x = x + each + 2
             end
         end
         function control:Refresh()
@@ -1053,7 +1254,8 @@ function W.NewLayout(parent, root, opts)
             end
             SetAvailable(self)
         end
-        control:Fit(controlWidth)
+        control:Fit(160)
+        control:SetWidth(160)
         control:Refresh()
         return control
     end
@@ -1062,29 +1264,32 @@ function W.NewLayout(parent, root, opts)
     -- reads at a glance (used for the number style). Each card has a radio dot, the option name, a
     -- short tagline and a few lines on how it behaves. `details` maps an option value to
     -- { tagline =, text = } (already translated).
-    local CARD_PAD, CARD_GAP, CARD_DOT, CARD_HEAD_GAP = 16, 12, 18, 10
+    local CARD_PAD, CARD_GAP, CARD_DOT, CARD_HEAD_GAP = 14, 12, 18, 10
+    local CARDS_GAP, CARDS_BOTTOM = 10, 8   -- over the cards (under the description) and under them
     function layout:StyleCards(setting, details)
-        local row = CreateFrame("Frame", nil, parent)
+        local row = CreateFrame("Frame", nil, Host())
         row:SetSize(self.width, 120)
+        -- What the setting does, over the cards; each card then says what its choice is like.
+        row.tip = L[setting.tip]
+        row.layoutDescription = W.SetSmall(W.Text(row, row.tip, ROW_LEFT, -ROW_PAD,
+            self.width - ROW_LEFT - ROW_RIGHT, MUTED))
         local control = CreateFrame("Frame", nil, row)
-        control:SetAllPoints(row)
         control.layoutType = "cards"
-        control.row, control.setting, control.cards = row, setting, {}
-        row.layoutControl = control
-        root.controls[#root.controls + 1] = control
+        control.cards = {}
+        Bind(control, row, setting)
+        RightClickResets(row, control)
 
         local function CardTip()
-            local note = (not NS.available[setting.cvar]) and L["Not available on this client."] or nil
-            return { title = L[setting.label], body = note or L[setting.tip], foot = setting.cvar }
+            return SettingTip(setting)
         end
 
         local function PaintCard(card)
             local enabled = not card.IsEnabled or card:IsEnabled()
             local selected = card.optionsSelected
             local over = enabled and card.IsMouseOver and card:IsMouseOver()
-            local fill = selected and C.cardSelected or over and C.cardHover or C.card
+            local fill = selected and C.cardSelected or over and C.cardHover or C.window
             local ring = selected and (enabled and C.accent or C.switchOnDisabled) or C.edge
-            W.Paint(card, fill, 10, ring)
+            W.Paint(card, fill, 9, ring)
             -- Radio dot: a ring when off, a filled gold disc with a tick when on.
             card.dot:SetVertexColor(RGB(selected and (enabled and C.accent or C.switchOnDisabled) or C.radio))
             card.dotInner:SetVertexColor(RGB(fill))
@@ -1100,7 +1305,7 @@ function W.NewLayout(parent, root, opts)
             local card = CreateFrame("Button", nil, control)
             card.value = option[1]
             card.dot = Circle(card, CARD_DOT, C.radio, "ARTWORK")
-            card.dotInner = Circle(card, CARD_DOT - 4, C.card, "ARTWORK", 1)
+            card.dotInner = Circle(card, CARD_DOT - 4, C.window, "ARTWORK", 1)
             card.check = W.Icon(card, "Check", 12, C.onAccent, "OVERLAY")
             card.dot:SetPoint("TOPLEFT", card, "TOPLEFT", CARD_PAD, -CARD_PAD)
             card.dotInner:SetPoint("CENTER", card.dot, "CENTER", 0, 0)
@@ -1118,12 +1323,16 @@ function W.NewLayout(parent, root, opts)
             Hook(card, "OnEnter", PaintCard)
             Hook(card, "OnLeave", PaintCard)
             W.Tooltip(card, CardTip)
+            RightClickResets(card, control)
             control.cards[#control.cards + 1] = card
         end
 
-        -- Place the cards across `width`; returns the height they need (the tallest card, so
-        -- both stay the same height whatever the language).
-        function control:Fit(width)
+        -- Place the control `top` down the row and its cards across `width`; returns the height
+        -- the cards need (the tallest card, so both stay the same height whatever the language).
+        function control:Fit(width, top)
+            self:ClearAllPoints()
+            self:SetPoint("TOPLEFT", row, "TOPLEFT", ROW_LEFT, -top)
+            self:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -ROW_RIGHT, CARDS_BOTTOM)
             local count = #self.cards
             local each = math.floor((width - CARD_GAP * (count - 1)) / count)
             local headX = CARD_PAD + CARD_DOT + CARD_HEAD_GAP
@@ -1154,12 +1363,16 @@ function W.NewLayout(parent, root, opts)
                 card.dot:ClearAllPoints()
                 card.dot:SetPoint("TOPLEFT", card, "TOPLEFT", CARD_PAD, -(CARD_PAD + (card.titleHeight - CARD_DOT) / 2))
             end
+            -- The changed mark, in the row's left edge beside the cards' names.
+            row.layoutMark:ClearAllPoints()
+            row.layoutMark:SetPoint("CENTER", row, "TOPLEFT", ROW_LEFT / 2, -(top + CARD_PAD + 9))
             return height
         end
 
         function control:Refresh()
             local current = NS.values[setting.cvar] or setting.default
             local available = NS.available[setting.cvar] and true or false
+            row.layoutDescription:SetText(available and row.tip or L["This setting is not available on this client."])
             for _, card in ipairs(self.cards) do
                 card.optionsSelected = math.abs(card.value - current) < 0.01
                 SetControlEnabled(card, available)
@@ -1168,12 +1381,11 @@ function W.NewLayout(parent, root, opts)
         end
 
         self:AddRow(row, control.cards[1].title, "cards")
-        row.layoutGap = 12
-        control:Fit(self.width)
         control:Refresh()
         return control
     end
 
+    -- An on/off switch for a setting of the addon's own.
     function layout:Switch(label, tip, get, set)
         local row = self:NewRow(label, tip)
         local control = W.Switch(row)
@@ -1198,7 +1410,8 @@ function W.NewLayout(parent, root, opts)
         local control = W.Switch(row)
         control.layoutType = "switch"
         Register(control, row, setting)
-        control:SetScript("OnClick", function(self)
+        control:SetScript("OnClick", function(self, button)
+            if button == "RightButton" then return end
             if NS.available[setting.cvar] then
                 NS.Set(setting.cvar, self:GetChecked() and 1 or 0)
             end
@@ -1216,8 +1429,8 @@ function W.NewLayout(parent, root, opts)
     -- A dropdown: the current choice on a button, the rest in a popup menu. `choices` is
     -- { { id =, label = }, ... } (labels already translated); get() returns the current id.
     function layout:Choice(label, tip, choices, get, set)
-        local row, _, controlWidth = self:NewRow(label, tip)
-        local control = W.Button(row, "", controlWidth, CONTROL_HEIGHT, nil, "flat")
+        local row = self:NewRow(label, tip)
+        local control = W.Button(row, "", 200, CONTROL_HEIGHT, nil, "flat")
         control.layoutType = "choice"
         local font = control:GetFontString()
         font:SetPoint("LEFT", 12, 0)
@@ -1283,7 +1496,7 @@ function W.NewLayout(parent, root, opts)
         card.badgeText:SetWordWrap(false)
         W.Paint(card.badge, spec.ring, 11)
 
-        card.title = W.Text(card, spec.title, 0, 0, nil, C.bright, "semibold", 21)
+        card.title = W.Text(card, spec.title, 0, 0, nil, C.bright, "semibold", 22)
         card.body = W.Text(card, spec.body, 0, 0, nil, C.navText, "regular", 15)
 
         card.features = {}
@@ -1319,7 +1532,7 @@ function W.NewLayout(parent, root, opts)
             self.logoFrame:ClearAllPoints()
             self.logoFrame:SetPoint("TOPLEFT", self, "TOPLEFT", PROMO_PAD, -PROMO_PAD)
 
-            self.badge:SetSize(math.floor(self.badgeText:GetStringWidth() + 22 + 0.5), 22)
+            self.badge:SetSize(math.floor(W.TextWidth(self.badgeText) + 22 + 0.5), 22)
             self.badge:ClearAllPoints()
             self.badge:SetPoint("TOPLEFT", self, "TOPLEFT", textX, -PROMO_PAD)
             local y = PROMO_PAD + 22 + 10
@@ -1355,7 +1568,7 @@ function W.NewLayout(parent, root, opts)
             if #self.features > 0 then y = lineTop + lineHeight + 22 end
 
             -- Call to action, with the small print beside it (or under it when narrow).
-            local buttonWidth = math.max(170, math.floor(self.button:GetFontString():GetStringWidth() + 48 + 0.5))
+            local buttonWidth = math.max(170, math.ceil(W.TextWidth(self.button:GetFontString()) + 48))
             self.button:SetSize(buttonWidth, 36)
             self.button:ClearAllPoints()
             self.button:SetPoint("TOPLEFT", self, "TOPLEFT", textX, -y)
@@ -1382,99 +1595,261 @@ function W.NewLayout(parent, root, opts)
         end
 
         self:AddRow(row, card.title, "promo")
-        row.layoutGap = 28
         card:Fit(self.width)
         return card
     end
 
     -- A description on the left and a button on the right that runs `onClick`.
-    function layout:Action(label, tip, onClick, caption)
-        local row = self:NewRow(caption or "", tip)
-        local control = W.Button(row, label, 160, CONTROL_HEIGHT, function() onClick() end, "flat")
+    function layout:Action(label, tip, onClick)
+        local row = CreateFrame("Frame", nil, Host())
+        row:SetSize(self.width, ACTION_HEIGHT)
+        local caption = W.SetSmall(W.Text(row, tip or "", ROW_LEFT, -14, nil, MUTED))
+        local control = W.Button(row, label, 160, 30, function() onClick() end, "flat")
         control.layoutType = "action"
         row.layoutControl = control
+        -- On the page itself (under a warning) it needs a card of its own.
+        if row:GetParent() == parent then W.Paint(row, C.card, 10, C.line) end
+        self:AddRow(row, caption, "action")
         return control
     end
 
-    -- Size a row to its caption and control; returns its height.
-    local function PlaceControlRow(row, width)
-        local caption, control = row.layoutCaption, row.layoutControl
-        local controlWidth = ControlWidth(width)
-        local controlHeight = CONTROL_HEIGHT
-        local textWidth = width - controlWidth - 24
-        if control.layoutType == "switch" then
-            textWidth = width - 40 - 24
-            controlHeight = 24
-        elseif control.layoutType == "slider" then
-            control:SetWidth(controlWidth - 64)
-            controlHeight = 20
-        elseif control.layoutType == "segments" then
-            control:SetWidth(controlWidth)
-            control:Fit(controlWidth)
-            controlHeight = 36
-        elseif control.layoutType == "choice" then
-            control:SetWidth(controlWidth)
-        elseif control.layoutType == "action" then
-            control:SetWidth(math.min(160, controlWidth))
+    ---------------------------------------------------------------------------------------------
+    -- Placing
+    ---------------------------------------------------------------------------------------------
+
+    -- Size a row to `width`: the caption and the control on a top line, the description across the
+    -- row under them. `line` is the top line's height where two rows share a line, so that their
+    -- captions and descriptions stand level. Returns the row's height and its own top line's.
+    local function PlaceControlRow(row, width, line)
+        local caption, control, description = row.layoutCaption, row.layoutControl, row.layoutDescription
+        local kind = control.layoutType
+        local taken, controlHeight = 40, 24   -- a switch
+        if kind == "slider" then
+            local track = Clamp(math.floor(width * 0.34), 90, 220)
+            control:SetWidth(track)
+            taken, controlHeight = track + 8 + VALUE_WIDTH, 20
+        elseif kind == "segments" then
+            -- Wider for long translations, while the caption keeps some room.
+            local room = width - ROW_LEFT - ROW_RIGHT - 14 - CAPTION_MIN
+            local segments = math.max(Clamp(math.floor(width * 0.5), 132, 220), math.min(control:Needed(), room))
+            control:SetWidth(segments)
+            control:Fit(segments)
+            taken, controlHeight = segments, 32
+        elseif kind == "choice" then
+            local choice = Clamp(math.floor(width * 0.55), 150, 240)
+            control:SetWidth(choice)
+            taken, controlHeight = choice, CONTROL_HEIGHT
         end
+        local textWidth = width - ROW_LEFT - ROW_RIGHT - taken - 14
         caption:SetWidth(textWidth)
-        local description = row.layoutDescription
-        description:SetWidth(textWidth)
+        local own = math.ceil(math.max(CONTROL_HEIGHT, caption:GetStringHeight()))
+        line = line or own
+        local middle = ROW_PAD + line / 2
+        caption:ClearAllPoints()
+        caption:SetPoint("LEFT", row, "TOPLEFT", ROW_LEFT, -middle)
+        description:SetWidth(width - ROW_LEFT - ROW_RIGHT)
         description:ClearAllPoints()
-        local top = ROW_PAD + caption:GetStringHeight() + 4
-        description:SetPoint("TOPLEFT", row, "TOPLEFT", 0, -top)
-        local textHeight = top - ROW_PAD + description:GetStringHeight()
-        local height = math.max(row.minimumHeight, ROW_PAD * 2 + math.max(textHeight, controlHeight))
-        -- Center the control against the text block.
-        local controlY = -math.floor((height - controlHeight) / 2 + 0.5)
+        description:SetPoint("TOPLEFT", row, "TOPLEFT", ROW_LEFT, -(ROW_PAD + line + ROW_GAP))
         control:ClearAllPoints()
-        if control.layoutType == "slider" then
-            control:SetPoint("TOPRIGHT", row, "TOPRIGHT", -64, controlY)
+        if kind == "slider" then
+            control:SetPoint("RIGHT", row, "TOPRIGHT", -(ROW_RIGHT + VALUE_WIDTH + 8), -middle)
             control.valueText:ClearAllPoints()
-            control.valueText:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, controlY + 1)
+            control.valueText:SetPoint("RIGHT", row, "TOPRIGHT", -ROW_RIGHT, -middle)
             control:PaintFill(tonumber(control:GetValue()) or 0)
         else
-            control:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, controlY)
+            control:SetPoint("RIGHT", row, "TOPRIGHT", -ROW_RIGHT, -middle)
         end
-        return height
+        if row.layoutMark then
+            row.layoutMark:ClearAllPoints()
+            row.layoutMark:SetPoint("CENTER", row, "TOPLEFT", ROW_LEFT / 2, -middle)
+        end
+        return math.ceil(ROW_PAD + line + ROW_GAP + description:GetStringHeight() + ROW_PAD), own
     end
 
-    -- Position every row; returns the column height. Rows of a `When` whose predicate is false
-    -- are hidden and take no space.
-    function layout:Reflow()
-        local y = 0
-        for _, row in ipairs(self.rows) do
-            local visible = not row.layoutWhen or row.layoutWhen()
-            row:SetShown(visible)
-            if visible then
-                y = y - row.layoutGap
-                local caption = row.layoutCaption
-                row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", self.x, y)
-                row:SetWidth(self.width)
-                local height
-                if row.layoutKind == "heading" then
-                    caption:SetWidth(self.width)
-                    height = math.max(24, caption:GetStringHeight() + 12)
-                elseif row.layoutKind == "warning" then
-                    caption:SetWidth(self.width - 54)
-                    height = math.max(18, caption:GetStringHeight()) + 24
-                elseif row.layoutKind == "note" then
-                    caption:SetWidth(self.width)
-                    height = math.max(16, caption:GetStringHeight()) + 12
-                elseif row.layoutKind == "cards" then
-                    height = row.layoutControl:Fit(self.width) + 8
-                elseif row.layoutKind == "promo" then
-                    height = row.layoutControl:Fit(self.width)
-                else
-                    height = PlaceControlRow(row, self.width)
-                end
-                row:SetHeight(height)
-                y = y - height
+    -- Size any row to `width`; returns the height it needs (a control row also its top line's).
+    local function PlaceRow(row, width, line)
+        local caption = row.layoutCaption
+        local kind = row.layoutKind
+        if kind == "control" then
+            return PlaceControlRow(row, width, line)
+        elseif kind == "cards" then
+            local description = row.layoutDescription
+            description:SetWidth(width - ROW_LEFT - ROW_RIGHT)
+            local top = math.ceil(ROW_PAD + description:GetStringHeight() + CARDS_GAP)
+            return top + row.layoutControl:Fit(width - ROW_LEFT - ROW_RIGHT, top) + CARDS_BOTTOM
+        elseif kind == "note" then
+            caption:SetWidth(width - ROW_LEFT - ROW_RIGHT)
+            return math.ceil(math.max(16, caption:GetStringHeight()) + 18)
+        elseif kind == "warning" then
+            caption:SetWidth(width - 60)
+            return math.ceil(math.max(18, caption:GetStringHeight()) + 22)
+        elseif kind == "promo" then
+            return row.layoutControl:Fit(width)
+        elseif kind == "empty" then
+            caption:SetWidth(width - 32)
+            return math.ceil(caption:GetStringHeight() + 60)
+        end
+        -- action
+        local buttonWidth = W.FitButton(row.layoutControl, 32, 150)
+        local textWidth = width - ROW_LEFT - ROW_RIGHT - buttonWidth - 14
+        caption:SetWidth(textWidth)
+        local textHeight = caption:GetStringHeight()
+        local tall = math.ceil(math.max(ACTION_HEIGHT, textHeight + 22))
+        caption:ClearAllPoints()
+        caption:SetPoint("LEFT", row, "LEFT", ROW_LEFT, 0)
+        row.layoutControl:ClearAllPoints()
+        row.layoutControl:SetPoint("RIGHT", row, "RIGHT", -ROW_RIGHT, 0)
+        return tall
+    end
+
+    local function Visible(self, row)
+        if row.layoutWhen and not row.layoutWhen() then return false end
+        if not self.keep or row.layoutAlways then return true end
+        return row.layoutSetting and self.keep[row.layoutSetting.cvar] and true or false
+    end
+
+    -- The `index`th hairline of a card.
+    local function Rule(card, index)
+        local rule = card.rules[index]
+        if not rule then
+            rule = W.Line(card, C.line, "ARTWORK")
+            card.rules[index] = rule
+        end
+        rule:ClearAllPoints()
+        rule:Show()
+        return rule
+    end
+
+    -- Lay a card's visible rows out; returns the card's height.
+    local function PlaceCard(card, list, width)
+        -- Two compact rows share a line when the card is wide enough; the last of an odd run
+        -- keeps to the left half, and a row with no neighbour at all takes the whole line.
+        local lines, index = {}, 1
+        while index <= #list do
+            local row, other = list[index], list[index + 1]
+            local pairing = width >= HALVES_MIN and row.layoutKind == "control"
+            if pairing and other and other.layoutKind == "control" then
+                lines[#lines + 1] = { row, other, halves = true }
+                index = index + 2
+            else
+                local previous = lines[#lines]
+                lines[#lines + 1] = { row, halves = pairing and previous and previous.halves }
+                index = index + 1
             end
         end
-        parent:SetHeight(math.max(1, -y + 24))
-        return -y + 24
+        local y, rules = CARD_HEADER + 1, 0
+        local half = math.floor(width / 2)
+        for number, line in ipairs(lines) do
+            local first, second = line[1], line[2]
+            local firstWidth = line.halves and half or width
+            -- Two rows on a line share the taller of their top lines.
+            local shared
+            if second then
+                local _, left = PlaceRow(first, firstWidth)
+                local _, right = PlaceRow(second, width - half)
+                shared = math.max(left, right)
+            end
+            local height = (PlaceRow(first, firstWidth, shared))
+            if second then height = math.max(height, (PlaceRow(second, width - half, shared))) end
+            for column, row in ipairs(line) do
+                local rowWidth = column == 2 and width - half or firstWidth
+                row:ClearAllPoints()
+                row:SetPoint("TOPLEFT", card, "TOPLEFT", column == 2 and half or 0, -y)
+                row:SetSize(rowWidth, height)
+            end
+            if number > 1 then
+                rules = rules + 1
+                local rule = Rule(card, rules)
+                rule:SetHeight(1)
+                rule:SetPoint("TOPLEFT", card, "TOPLEFT", 12, -y)
+                rule:SetPoint("TOPRIGHT", card, "TOPRIGHT", -12, -y)
+            end
+            if second then
+                rules = rules + 1
+                local rule = Rule(card, rules)
+                rule:SetSize(1, math.max(1, height - 18))
+                rule:SetPoint("TOPLEFT", card, "TOPLEFT", half, -(y + 9))
+            end
+            y = y + height
+        end
+        for spare = rules + 1, #card.rules do card.rules[spare]:Hide() end
+        local reset = W.FitButton(card.reset, 24, 56)
+        card.title:SetWidth(math.max(1, width - ROW_LEFT - reset - 24))
+        return y + CARD_FOOT
+    end
+
+    -- Position every block; returns the page's height. Hidden rows take no space, and a card
+    -- with none of its rows showing is hidden. `self.sections` lists the cards on show.
+    function layout:Reflow()
+        local y, placed, any = PAGE_TOP, false, false
+        local sections = {}
+        local function Put(block, height, gap)
+            if placed then y = y + gap end
+            block:ClearAllPoints()
+            block:SetPoint("TOPLEFT", parent, "TOPLEFT", self.x, -y)
+            block:SetSize(self.width, height)
+            local top = y
+            y, placed = y + height, true
+            return top
+        end
+        for _, block in ipairs(self.blocks) do
+            if block.isCard then
+                local list = {}
+                for _, row in ipairs(block.rows) do
+                    local visible = Visible(self, row)
+                    row:SetShown(visible)
+                    if visible then list[#list + 1] = row end
+                end
+                block:SetShown(#list > 0)
+                if #list > 0 then
+                    any = true
+                    local top = Put(block, PlaceCard(block, list, self.width), CARD_SPACE)
+                    sections[#sections + 1] = { title = block.title:GetText(), top = top }
+                end
+            else
+                local visible = Visible(self, block)
+                block:SetShown(visible)
+                if visible then
+                    local gap = block.layoutKind == "promo" and CARD_SPACE * 2 or CARD_SPACE
+                    Put(block, PlaceRow(block, self.width), gap)
+                end
+            end
+        end
+        if self.empty then
+            local show = self.keep ~= nil and not any
+            self.empty:SetShown(show)
+            if show then Put(self.empty, PlaceRow(self.empty, self.width), CARD_SPACE) end
+        end
+        self.sections = sections
+        parent:SetHeight(math.max(1, y + PAGE_BOTTOM))
+        return y + PAGE_BOTTOM
+    end
+
+    -- List only the settings in `keep` (cvar -> true), or everything when nil.
+    function layout:SetKeep(keep)
+        self.keep = keep
+    end
+
+    -- Show each setting's changed mark and each card's Reset as the settings stand.
+    -- Returns how many settings on the page differ from their defaults, and which.
+    function layout:UpdateMarks()
+        local total, changedSet = 0, {}
+        for _, card in ipairs(self.cards) do
+            local count = 0
+            for _, row in ipairs(card.rows) do
+                if row.layoutSetting then
+                    local changed = NS.IsChanged(row.layoutSetting.cvar)
+                    row.layoutMark:SetShown(changed)
+                    if changed then
+                        count = count + 1
+                        changedSet[row.layoutSetting.cvar] = true
+                    end
+                end
+            end
+            card.reset:SetShown(count > 0)
+            total = total + count
+        end
+        return total, changedSet
     end
 
     function layout:Finish()
@@ -1485,6 +1860,7 @@ function W.NewLayout(parent, root, opts)
             if newWidth and newWidth > 0 and math.abs(fitted - self.width) >= 1 then
                 self.width = fitted
                 self:Reflow()
+                if root.LayoutChanged then root:LayoutChanged(self) end
             end
         end)
         return self:Reflow()

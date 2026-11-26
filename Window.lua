@@ -1,21 +1,24 @@
--- Forever Combat Style: the settings window, laid out like the PlateSCT settings: a header, a
--- page sidebar on the left (General, Combat, Appearance) and a scrolling page with a title.
+-- Forever Combat Style: the settings window. A sidebar of pages (General, Combat, Appearance)
+-- with each page's count of changed settings; beside it the page title, a tab per section with
+-- the All / Changed filter and the preview switch, the damage preview, the page's section cards
+-- and a footer.
 local ADDON_NAME, NS = ...
 local W = NS.W
 local C = W.COLORS
 local L = NS.L   -- Locales/Locale.lua loads first (see the TOC)
 
-local WINDOW_WIDTH, WINDOW_HEIGHT = 840, 780   -- default size
-local MIN_WIDTH, MIN_HEIGHT = 720, 560           -- smallest size the grip allows
-local SIDEBAR_WIDTH, HEADER_HEIGHT = 200, 64
-local PAGE_TOP = 92   -- from the top of the page title to the scrolling page
-local NAV_TOP, NAV_STEP, NAV_HEIGHT = 24, 38, 36
-local UTILITY_STEP, UTILITY_HEIGHT = 32, 30
+local WINDOW_WIDTH, WINDOW_HEIGHT = 1000, 780   -- default size
+local MIN_WIDTH, MIN_HEIGHT = 720, 560          -- smallest size the grip allows
+local SIDEBAR_WIDTH, HEADER_HEIGHT = 216, 88
+local TABS_HEIGHT, FOOTER_HEIGHT = 40, 52
+local NAV_HEIGHT = 40
+local PAGE_PAD = 24    -- the left edge of the title, the tabs and the cards
+local JUMP_ABOVE = 16  -- the room left above a section a tab jumps to
 local GOLD = C.accent
 -- Seconds after the window opens at which every label is laid out again (see OnShow).
 local RELAY_DELAYS = { 0.3, 1.0, 2.5 }
 
-local session = { page = "general", scroll = {} }
+local session = { page = "general", filter = "all", scroll = {} }
 
 -- The game cannot open a browser, so links are offered in a box to copy from.
 local function RegisterLinkPopup(name, url)
@@ -65,23 +68,26 @@ local function PlateSCTHidesBlizzard()
     return addon and type(addon.db) == "table" and addon.db.hideBlizzardFCT and true or false
 end
 
--- The warning and its fix, shown under each page's banner while PlateSCT hides Blizzard's text.
+-- The warning and its fix, shown at the top of each page while PlateSCT hides Blizzard's text
+-- (also while the page lists only changed settings).
 local function PlateSCTWarning(layout)
-    layout:When(PlateSCTHidesBlizzard, function()
-        layout:Warning(L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."])
-        layout:Action(L["Show Blizzard numbers"],
-            L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."],
-            function()
-                local addon = PlateSCT()
-                if addon and addon.SetHideBlizzardFCT then
-                    addon:SetHideBlizzardFCT(false)
-                elseif addon and addon.db then
-                    -- An older PlateSCT without the hook: turn the option off and its text back on.
-                    addon.db.hideBlizzardFCT = false
-                    if addon.RestoreBlizzardFCTSetting then addon:RestoreBlizzardFCTSetting() end
-                end
-                NS.Resync()
-            end)
+    layout:Always(function()
+        layout:When(PlateSCTHidesBlizzard, function()
+            layout:Warning(L["PlateSCT is hiding Blizzard's floating combat text, so these settings won't show in game."])
+            layout:Action(L["Show Blizzard numbers"],
+                L["Turns off PlateSCT's \"Hide Blizzard floating combat text\". PlateSCT's own numbers keep working."],
+                function()
+                    local addon = PlateSCT()
+                    if addon and addon.SetHideBlizzardFCT then
+                        addon:SetHideBlizzardFCT(false)
+                    elseif addon and addon.db then
+                        -- An older PlateSCT without the hook: turn the option off and its text back on.
+                        addon.db.hideBlizzardFCT = false
+                        if addon.RestoreBlizzardFCTSetting then addon:RestoreBlizzardFCTSetting() end
+                    end
+                    NS.Resync()
+                end)
+        end)
     end)
 end
 
@@ -133,7 +139,7 @@ local function BuildPages()
             build = function(layout)
                 layout:Warning(warning)
                 PlateSCTWarning(layout)
-                layout:Heading(L["Number Style"])
+                layout:Section(L["Number Style"])
                 layout:StyleCards(S("classicStyleWorldText"), {
                     [1] = {
                         tagline = L["Smooth reveal"],
@@ -148,15 +154,15 @@ local function BuildPages()
                     L["Both styles are fully tweakable: Size and every slider on the %s page (including the Pop & Fade ramp) apply to whichever style you choose."],
                     L["Appearance"]))
                 layout:Slider(S("WorldTextScale_v2"))
-                layout:Heading(L["Your Combat Text"])
+                layout:Section(L["Your Combat Text"])
                 layout:Toggle(S("enableFloatingCombatText"))
                 layout:Segments(S("floatingCombatTextFloatMode_v2"))
-                layout:Heading(L["Behaviour"])
+                layout:Section(L["Behaviour"])
                 layout:Switch(L["Re-apply at login"],
                     L["Put your settings back at login if the client reset them."],
                     function() return NS.db.reapply end,
                     function(value) NS.db.reapply = value end)
-                layout:Heading(L["Language"])
+                layout:Section(L["Language"])
                 local choices = {}
                 for _, option in ipairs(NS.LOCALE_OPTIONS) do
                     -- Each name is drawn in a font that has its own script (Source Sans 3 has no
@@ -186,15 +192,15 @@ local function BuildPages()
             build = function(layout)
                 layout:Warning(warning)
                 PlateSCTWarning(layout)
-                layout:Heading(L["Damage"])
+                layout:Section(L["Damage"])
                 layout:Toggle(S("floatingCombatTextCombatDamage_v2"))
                 layout:Toggle(S("floatingCombatTextCombatDamageAllAutos_v2"))
                 layout:Toggle(S("floatingCombatTextCombatLogPeriodicSpells_v2"))
-                layout:Heading(L["Healing"])
+                layout:Section(L["Healing"])
                 layout:Toggle(S("floatingCombatTextCombatHealing_v2"))
                 layout:Toggle(S("floatingCombatTextCombatHealingAbsorbSelf_v2"))
                 layout:Toggle(S("floatingCombatTextCombatHealingAbsorbTarget_v2"))
-                layout:Heading(L["Pets"])
+                layout:Section(L["Pets"])
                 layout:Toggle(S("floatingCombatTextPetMeleeDamage_v2"))
                 layout:Toggle(S("floatingCombatTextPetSpellDamage_v2"))
             end,
@@ -205,16 +211,16 @@ local function BuildPages()
             build = function(layout)
                 layout:Warning(warning)
                 PlateSCTWarning(layout)
-                layout:Heading(L["Fall & Spread"])
+                layout:Section(L["Fall & Spread"])
                 layout:Slider(S("WorldTextGravity_v2"))
                 layout:Slider(S("WorldTextStartPosRandomness_v2"))
-                layout:Heading(L["Direction"])
+                layout:Section(L["Direction"])
                 layout:Slider(S("floatingCombatTextCombatDamageDirectionalScale_v2"))
                 layout:Slider(S("floatingCombatTextCombatDamageDirectionalOffset_v2"))
-                layout:Heading(L["Start Height"])
+                layout:Section(L["Start Height"])
                 layout:Slider(S("WorldTextScreenY_v2"))
                 layout:Slider(S("WorldTextCritScreenY_v2"))
-                layout:Heading(L["Pop & Fade"])
+                layout:Section(L["Pop & Fade"])
                 layout:Slider(S("WorldTextRampDuration_v2"))
                 layout:Slider(S("WorldTextRampPow_v2"))
                 layout:Slider(S("WorldTextRampPowCrit_v2"))
@@ -249,134 +255,347 @@ local function Build()
     if not listed then table.insert(UISpecialFrames, "ForeverCombatStyleFrame") end
     W.Backdrop(frame, "window")
     frame.controls, frame.layouts, frame.pages = {}, {}, {}
-    frame.navButtons, frame.utilityButtons = {}, {}
+    frame.navButtons, frame.tabs = {}, {}
 
-    -- Header: identity on the left, close on the right.
-    local titleBar = CreateFrame("Frame", nil, frame)
-    titleBar:SetPoint("TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", -1, -1)
-    titleBar:SetHeight(HEADER_HEIGHT)
-    titleBar:EnableMouse(true)
-    -- The darkest surface; square bottom corners, rounded top to match the window.
-    W.Paint(titleBar, C.drawer, 9, nil, "34")
     -- Move from mouse down/up: dragging a child shifts the parent cursor offset.
-    titleBar:SetScript("OnMouseDown", function(_, button) if button == "LeftButton" then frame:StartMoving(true) end end)
-    titleBar:SetScript("OnMouseUp", function() frame:StopMovingOrSizing(); frame:SetUserPlaced(false) end)
-    local headerLine = W.Line(titleBar, C.line)
-    headerLine:SetHeight(1)
-    headerLine:SetPoint("BOTTOMLEFT"); headerLine:SetPoint("BOTTOMRIGHT")
-    local logo = CreateFrame("Frame", nil, titleBar)
-    logo:SetSize(32, 32)
-    logo:SetPoint("LEFT", 20, 0)
-    W.Paint(logo, GOLD, 9)
-    local logoIcon = W.Icon(logo, "Combat", 20, C.onAccent, "OVERLAY")
-    logoIcon:SetPoint("CENTER")
-    W.Text(titleBar, "Forever Combat Style", 64, -15, 300, C.bright, "semibold", 15)
-    local gameVersion = GetBuildInfo and GetBuildInfo()
-    local version = W.Text(titleBar, "v" .. NS.VERSION .. (gameVersion and ("  ·  " .. L["Client"] .. " " .. gameVersion) or ""),
-        64, -34, 360, C.muted)
-    version:SetWordWrap(false)
-    local close = W.CloseButton(frame, function() frame:Hide() end)
-    close:SetPoint("TOPRIGHT", -16, -16)
-    close:SetFrameLevel(titleBar:GetFrameLevel() + 5)
-    W.Tooltip(close, L["Close"])
-
-    -- Sidebar: pages, then quiet utilities pinned to the bottom.
-    local sidebar = CreateFrame("Frame", nil, frame)
-    sidebar:SetWidth(SIDEBAR_WIDTH)
-    sidebar:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, 0)
-    sidebar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 1)
-    W.Paint(sidebar, C.sidebar, 9, nil, "123")
-    local sidebarLine = W.Line(sidebar, C.line)
-    sidebarLine:SetWidth(1)
-    sidebarLine:SetPoint("TOPRIGHT"); sidebarLine:SetPoint("BOTTOMRIGHT")
-    local hint = W.Text(sidebar, L["/fcs  ·  ESC to close"], 0, 0, 176, C.dim)
-    hint:ClearAllPoints()
-    hint:SetPoint("BOTTOMLEFT", 22, 14)
-    hint:SetWordWrap(false)
-    local divider = W.Line(sidebar, C.line)
-    divider:SetHeight(1)
-    divider:SetPoint("BOTTOMLEFT", 16, 110); divider:SetPoint("BOTTOMRIGHT", -16, 110)
-
-    -- Content: page title, subtitle and the scrolling page.
-    local content = CreateFrame("Frame", nil, frame)
-    content:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 0, 0)
-    content:SetPoint("BOTTOMRIGHT", -1, 1)
-    -- The damage preview (Preview.lua): its own band across the top of the content, above every
-    -- page, so it keeps playing whichever page is open. The page title starts below it.
-    frame.preview = NS.Preview.New(content)
-    local band = frame.preview.frame
-    band:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
-    band:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
-    band:SetHeight(NS.Preview.HEIGHT)
-    band:Show()
-    local below = NS.Preview.HEIGHT
-    frame.pageTitle = W.Text(content, "", 32, -below - 24, 560, C.bright, "semibold", 22)
-    frame.pageTitle:SetWordWrap(false)
-    -- The subtitle may wrap onto a second line: translations run longer than the English text.
-    frame.subtitle = W.Text(content, "", 32, -below - 52, nil, C.muted)
-    frame.subtitle:SetPoint("TOPRIGHT", content, "TOPRIGHT", -32, -below - 52)
-    frame.pageArea = CreateFrame("Frame", nil, content)
-    frame.pageArea:SetClipsChildren(true)
-
-    -- The scrolling page fills the content below the preview, the title and the subtitle.
-    function frame:LayoutPages()
-        self.pageArea:ClearAllPoints()
-        self.pageArea:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -below - PAGE_TOP)
-        self.pageArea:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", 0, 0)
-        for _, entry in pairs(self.pages) do entry.view:UpdateScroll() end
+    local function Draggable(region)
+        region:EnableMouse(true)
+        region:SetScript("OnMouseDown", function(_, button) if button == "LeftButton" then frame:StartMoving(true) end end)
+        region:SetScript("OnMouseUp", function() frame:StopMovingOrSizing(); frame:SetUserPlaced(false) end)
     end
 
-    function frame:Refresh()
-        NS.Refresh()
-        for _, control in ipairs(self.controls) do control:Refresh() end
-        self.preview.Look()
-        for _, layout in ipairs(self.layouts) do layout:Reflow() end
+    local function Rule(parent, from, to, y)
+        local line = W.Line(parent, C.line, "ARTWORK")
+        line:SetHeight(1)
+        line:SetPoint(from, 0, y or 0)
+        line:SetPoint(to, 0, y or 0)
+        return line
+    end
+
+    -- Sidebar: the addon's name, the pages, and how to close the window.
+    local sidebar = CreateFrame("Frame", nil, frame)
+    sidebar:SetWidth(SIDEBAR_WIDTH)
+    sidebar:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
+    sidebar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 1, 1)
+    W.Paint(sidebar, C.sidebar, 9, nil, "23")   -- rounded where it meets the window's corners
+    Draggable(sidebar)
+    local sidebarLine = W.Line(sidebar, C.line, "ARTWORK")
+    sidebarLine:SetWidth(1)
+    sidebarLine:SetPoint("TOPRIGHT"); sidebarLine:SetPoint("BOTTOMRIGHT")
+    local logo = CreateFrame("Frame", nil, sidebar)
+    logo:SetSize(36, 36)
+    logo:SetPoint("TOPLEFT", 20, -26)
+    W.Paint(logo, GOLD, 9)
+    local logoIcon = W.Icon(logo, "Combat", 22, C.onAccent, "OVERLAY")
+    logoIcon:SetPoint("CENTER")
+    W.Text(sidebar, "FOREVER", 68, -28, nil, GOLD, "semibold", 12):SetWordWrap(false)
+    W.Text(sidebar, "Combat Style", 68, -44, nil, C.bright, "semibold", 16):SetWordWrap(false)
+    local gameVersion = GetBuildInfo and GetBuildInfo()
+    local version = W.Text(sidebar, "v" .. NS.VERSION .. (gameVersion and ("  ·  " .. L["Client"] .. " " .. gameVersion) or ""),
+        20, -84, SIDEBAR_WIDTH - 28, C.dim, "regular", 12)
+    version:SetWordWrap(false)
+    -- These two run on with the lines under the tabs and over the footer.
+    Rule(sidebar, "TOPLEFT", "TOPRIGHT", -(HEADER_HEIGHT + TABS_HEIGHT - 1))
+    Rule(sidebar, "BOTTOMLEFT", "BOTTOMRIGHT", FOOTER_HEIGHT - 1)
+    local hint = W.Text(sidebar, L["/fcs  ·  ESC to close"], 0, 0, SIDEBAR_WIDTH - 28, C.dim, "regular", 13)
+    hint:ClearAllPoints()
+    hint:SetPoint("LEFT", sidebar, "BOTTOMLEFT", 20, FOOTER_HEIGHT / 2)
+    hint:SetWordWrap(false)
+
+    local main = CreateFrame("Frame", nil, frame)
+    main:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 0, 0)
+    main:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
+
+    -- Header: the page's title and subtitle over a warm glow, close on the right.
+    local header = CreateFrame("Frame", nil, main)
+    header:SetPoint("TOPLEFT"); header:SetPoint("TOPRIGHT")
+    header:SetHeight(HEADER_HEIGHT)
+    Draggable(header)
+    local glow = W.Fade(header, C.glow, C.clear, "BACKGROUND")
+    glow:SetAllPoints(header)
+    frame.pageTitle = W.Text(header, "", PAGE_PAD, -20, nil, C.bright, "semibold", 22)
+    frame.pageTitle:SetWordWrap(false)
+    -- The subtitle may wrap onto a second line: translations run longer than the English text.
+    frame.subtitle = W.Text(header, "", PAGE_PAD, -50, nil, C.muted, "regular", 13)
+    frame.subtitle:SetPoint("TOPRIGHT", header, "TOPRIGHT", -60, -50)
+    local close = W.CloseButton(frame, function() frame:Hide() end)
+    close:SetPoint("TOPRIGHT", -14, -14)
+    close:SetFrameLevel(header:GetFrameLevel() + 5)
+    W.Tooltip(close, L["Close"])
+
+    -- The gold rim along the window's top, brightest in the middle.
+    local rim = CreateFrame("Frame", nil, frame)
+    rim:SetAllPoints(frame)
+    rim:SetFrameLevel(frame:GetFrameLevel() + 40)
+    local rimLeft = W.Fade(rim, C.clear, C.rim, "OVERLAY")
+    rimLeft:SetHeight(1)
+    rimLeft:SetPoint("TOPLEFT", rim, "TOPLEFT", 10, 0)
+    rimLeft:SetPoint("TOPRIGHT", rim, "TOP", 0, 0)
+    local rimRight = W.Fade(rim, C.rim, C.clear, "OVERLAY")
+    rimRight:SetHeight(1)
+    rimRight:SetPoint("TOPLEFT", rim, "TOP", 0, 0)
+    rimRight:SetPoint("TOPRIGHT", rim, "TOPRIGHT", -10, 0)
+
+    -- The band under the header: a tab per section of the page; the filter and the preview
+    -- switch at its right end.
+    local band = CreateFrame("Frame", nil, main)
+    band:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, 0)
+    band:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", 0, 0)
+    band:SetHeight(TABS_HEIGHT)
+    Rule(band, "BOTTOMLEFT", "BOTTOMRIGHT")
+
+    local previewSwitch = W.Switch(band)
+    previewSwitch:SetPoint("RIGHT", band, "RIGHT", -24, 0)
+    previewSwitch:SetScript("OnClick", function(self)
+        NS.db.previewHidden = (not self:GetChecked()) or nil
+        self:Paint()
+        frame:LayoutPages()
+    end)
+    local previewLabel = W.Text(band, L["Preview"], 0, 0, nil, C.muted, "medium", 13)
+    previewLabel:ClearAllPoints()
+    previewLabel:SetPoint("RIGHT", previewSwitch, "LEFT", -8, 0)
+    previewLabel:SetWordWrap(false)
+    W.Tooltip(previewSwitch, L["Show or hide the damage preview."])
+    frame.previewSwitch = previewSwitch
+
+    local filter = CreateFrame("Frame", nil, band)
+    filter:SetHeight(28)
+    filter:SetPoint("RIGHT", previewLabel, "LEFT", -18, 0)
+    W.Paint(filter, C.window, 8, C.line)
+    local function FilterButton(label, name, tip)
+        local button = W.Button(filter, label, 60, 22, function() frame:SetFilter(name) end, "segment")
+        button.optionsRadius = 6
+        W.ReapplyFont(button:GetFontString())
+        W.Tooltip(button, tip)
+        return button
+    end
+    local showAll = FilterButton(L["All"], "all")
+    showAll:SetPoint("LEFT", filter, "LEFT", 3, 0)
+    local showChanged = FilterButton(L["Changed"], "changed", L["Show only the settings that differ from the defaults."])
+    showChanged:SetPoint("LEFT", showAll, "RIGHT", 2, 0)
+    frame.filterButtons = { all = showAll, changed = showChanged }
+
+    -- The damage preview (Preview.lua): under the tabs, above every page, so it keeps playing
+    -- whichever page is open.
+    frame.preview = NS.Preview.New(main)
+    local previewBand = frame.preview.frame
+    previewBand:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, 0)
+    previewBand:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, 0)
+    previewBand:SetHeight(NS.Preview.HEIGHT)
+
+    -- Footer: reload on the left, reset everything on the right.
+    local footer = CreateFrame("Frame", nil, main)
+    footer:SetPoint("BOTTOMLEFT"); footer:SetPoint("BOTTOMRIGHT")
+    footer:SetHeight(FOOTER_HEIGHT)
+    W.Paint(footer, C.drawer, 9, nil, "124")
+    Rule(footer, "TOPLEFT", "TOPRIGHT")
+    local reload = W.IconButton(footer, L["Reload UI"], "Transfer", function() ReloadUI() end)
+    reload:SetPoint("LEFT", footer, "LEFT", PAGE_PAD, 0)
+    W.Tooltip(reload, L["Reload the interface. Use it if a change does not show up in game."])
+    local reset = W.IconButton(footer, L["Reset Defaults"], "Reset", function()
+        NS.Reset()
+        frame:Refresh()
+    end)
+    reset:SetPoint("RIGHT", footer, "RIGHT", -PAGE_PAD, 0)
+    W.Tooltip(reset, L["Put every combat text setting back to the WoW Forever default."])
+
+    frame.pageArea = CreateFrame("Frame", nil, main)
+    frame.pageArea:SetClipsChildren(true)
+
+    -- The scrolling page fills what is left between the tabs (or the preview) and the footer.
+    function frame:LayoutPages()
+        local shown = not (NS.db and NS.db.previewHidden)
+        previewBand:SetShown(shown)
+        previewSwitch:SetChecked(shown)
+        previewSwitch:Paint()
+        local top = HEADER_HEIGHT + TABS_HEIGHT + (shown and NS.Preview.HEIGHT or 0)
+        self.pageArea:ClearAllPoints()
+        self.pageArea:SetPoint("TOPLEFT", main, "TOPLEFT", 0, -top)
+        self.pageArea:SetPoint("BOTTOMRIGHT", footer, "TOPRIGHT", 0, 0)
         for _, entry in pairs(self.pages) do entry.view:UpdateScroll() end
+        self:MarkTab()
+    end
+
+    -- Light the tab of the section in view: the one a tab jumped to until the page moves again,
+    -- else the last section that starts at the top of the view (the last of all at the end).
+    function frame:MarkTab()
+        local view = self.activeView
+        if not view then return end
+        local sections = self.pages[session.page].layout.sections
+        local position, maximum = view.scroll:GetVerticalScroll(), view:MaxScroll()
+        local active = 1
+        if self.jumped and math.abs(position - self.jumped.position) < 1 then
+            active = self.jumped.index
+        else
+            self.jumped = nil
+            for index, section in ipairs(sections) do
+                if section.top - JUMP_ABOVE - 8 <= position then active = index end
+            end
+            if maximum > 0 and position >= maximum - 1 then active = #sections end
+        end
+        for index, tab in ipairs(self.tabs) do W.SetSelected(tab, index == active) end
+    end
+
+    function frame:JumpTo(index)
+        local view = self.activeView
+        local section = view and self.pages[session.page].layout.sections[index]
+        if not section then return end
+        local position = math.max(0, math.min(view:MaxScroll(), section.top - JUMP_ABOVE))
+        self.jumped = { index = index, position = position }
+        view:SetScroll(position)
+    end
+
+    -- The `index`th section tab, made on first use, named and sized for `title`.
+    function frame:Tab(index, title)
+        local tab = self.tabs[index]
+        if not tab then
+            tab = W.TabButton(band, TABS_HEIGHT, function() frame:JumpTo(index) end)
+            self.tabs[index] = tab
+        end
+        tab:SetText(title)
+        W.FitButton(tab, 20)
+        return tab
+    end
+
+    -- The filter's size, then as many section tabs as fit before it (a narrow window or long
+    -- translations leave the last ones out; the page still scrolls to them). Where not even the
+    -- first fits, the preview switch goes without its word (its tooltip still names it).
+    function frame:LayoutTabs()
+        local filterWidth = W.FitButton(showAll, 22, 40) + W.FitButton(showChanged, 22, 60) + 8
+        filter:SetWidth(filterWidth)
+        local entry = self.pages[session.page]
+        local sections = entry and entry.layout.sections or {}
+        local labelWidth = W.TextWidth(previewLabel)
+        local room = band:GetWidth() - (24 + 40 + 8 + labelWidth + 18 + filterWidth) - 12
+        local first = sections[1] and self:Tab(1, sections[1].title)
+        local worded = not first or PAGE_PAD - 10 + first:GetWidth() <= room
+        previewLabel:SetShown(worded)
+        filter:ClearAllPoints()
+        if worded then
+            filter:SetPoint("RIGHT", previewLabel, "LEFT", -18, 0)
+        else
+            filter:SetPoint("RIGHT", previewSwitch, "LEFT", -18, 0)
+            room = room + labelWidth + 8
+        end
+        local x, full = PAGE_PAD - 10, false
+        for index, section in ipairs(sections) do
+            local tab = self:Tab(index, section.title)
+            local width = tab:GetWidth()
+            full = full or x + width > room
+            tab:SetShown(not full)
+            tab:ClearAllPoints()
+            tab:SetPoint("BOTTOMLEFT", band, "BOTTOMLEFT", x, 0)
+            x = x + width + 2
+        end
+        for index = #sections + 1, #self.tabs do self.tabs[index]:Hide() end
+        self:MarkTab()
+    end
+
+    -- The changed marks, the sidebar's counts and the filter's.
+    function frame:UpdateMarks()
+        local here = 0
+        for id, entry in pairs(self.pages) do
+            local count = entry.layout:UpdateMarks()
+            entry.changed = count
+            self.navButtons[id].count:SetText(count > 0 and tostring(count) or "")
+            if id == session.page then here = count end
+        end
+        local label = here > 0 and (L["Changed"] .. "  " .. here) or L["Changed"]
+        if showChanged:GetText() ~= label then
+            showChanged:SetText(label)
+            self:LayoutTabs()
+        end
+    end
+
+    -- Lay the open page out for the filter. The settings listed under "Changed" are the ones that
+    -- differ now: a row stays while it is being edited, even once it is back at its default.
+    local function ApplyFilter(self)
+        local entry = self.pages[session.page]
+        local _, changed = entry.layout:UpdateMarks()
+        entry.layout:SetKeep(session.filter == "changed" and changed or nil)
+        entry.layout:Reflow()
+        for name, button in pairs(self.filterButtons) do W.SetSelected(button, name == session.filter) end
+        self.jumped = nil
+        entry.view:UpdateScroll()
+        entry.view:SetScroll(session.filter == "all" and session.scroll[session.page] or 0)
+    end
+
+    -- Remember where the full page was scrolled to before it changes.
+    local function KeepScroll(self)
+        if self.activeView and self.shownFilter == "all" then
+            session.scroll[session.page] = self.activeView.scroll:GetVerticalScroll()
+        end
+    end
+
+    function frame:SetFilter(name)
+        KeepScroll(self)
+        session.filter = name
+        ApplyFilter(self)
+        self.shownFilter = name
+        self:LayoutTabs()
     end
 
     function frame:SelectPage(pageId)
         local entry = self.pages[pageId]
         if not entry then return end
-        if self.activeView then
-            session.scroll[session.page] = self.activeView.scroll:GetVerticalScroll()
-        end
+        KeepScroll(self)
         session.page = pageId
         for id, other in pairs(self.pages) do other.view:SetShown(id == pageId) end
         self.pageTitle:SetText(entry.page.label)
         self.subtitle:SetText(entry.page.subtitle)
         for id, button in pairs(self.navButtons) do W.SetSelected(button, id == pageId) end
         self.activeView = entry.view
-        entry.view:UpdateScroll()
-        entry.view:SetScroll(session.scroll[pageId] or 0)
+        ApplyFilter(self)
+        self.shownFilter = session.filter
+        self:UpdateMarks()
+        self:LayoutTabs()
+    end
+
+    function frame:Refresh()
+        NS.Refresh()
+        for _, control in ipairs(self.controls) do control:Refresh() end
+        self.preview.Look()
+        reload:Fit()
+        reset:Fit()
+        for _, layout in ipairs(self.layouts) do layout:Reflow() end
+        for _, entry in pairs(self.pages) do entry.view:UpdateScroll() end
+        self:UpdateMarks()
+        self:LayoutTabs()
+    end
+
+    -- A page was laid out again for a new width.
+    function frame:LayoutChanged(layout)
+        local entry = self.pages[session.page]
+        if entry and entry.layout == layout then
+            entry.view:UpdateScroll()
+            self:LayoutTabs()
+        end
     end
 
     -- Pages and their sidebar entries.
-    local width = SIDEBAR_WIDTH - 24
     for index, page in ipairs(PAGES) do
         local id = page.id
-        local button = W.NavButton(sidebar, page.label, page.icon, width, NAV_HEIGHT,
-            function() frame:SelectPage(id) end, "nav")
-        button:SetPoint("TOPLEFT", 12, -NAV_TOP - (index - 1) * NAV_STEP)
+        local button = W.NavButton(sidebar, page.label, page.icon, SIDEBAR_WIDTH - 1, NAV_HEIGHT,
+            function() frame:SelectPage(id) end)
+        button:SetPoint("TOPLEFT", 0, -(HEADER_HEIGHT + TABS_HEIGHT + 10 + (index - 1) * NAV_HEIGHT))
+        W.Tooltip(button, function()
+            local entry = frame.pages[id]
+            local count = entry and entry.changed or 0
+            if count > 0 then return string.format(L["Settings changed from the default: %d"], count) end
+        end)
         frame.navButtons[id] = button
         local view = W.ScrollView(frame.pageArea, frame)
         local layout = W.NewLayout(view.child, frame,
-            { width = view.child:GetWidth(), padLeft = 32, padRight = 14, controlWidth = 220 })
+            { width = view.child:GetWidth(), padLeft = PAGE_PAD, padRight = PAGE_PAD - W.SCROLL_ROOM })
         page.build(layout)
+        layout:Empty(L["Nothing on this page differs from the defaults."])
         layout:Finish()
         frame.pages[id] = { page = page, view = view, layout = layout }
+        view.OnScroll = function()
+            if frame.activeView == view then frame:MarkTab() end
+        end
     end
-
-    local reload = W.NavButton(sidebar, L["Reload UI"], "Transfer", width, UTILITY_HEIGHT,
-        function() ReloadUI() end, "utility")
-    reload:SetPoint("BOTTOMLEFT", 12, 38 + UTILITY_STEP)
-    W.Tooltip(reload, L["Reload the interface. Use it if a change does not show up in game."])
-    local reset = W.NavButton(sidebar, L["Reset Defaults"], "Reset", width, UTILITY_HEIGHT, function()
-        NS.Reset()
-        frame:Refresh()
-    end, "utility")
-    reset:SetPoint("BOTTOMLEFT", 12, 38)
-    W.Tooltip(reset, L["Put every combat text setting back to the WoW Forever default."])
+    main:SetScript("OnSizeChanged", function() frame:LayoutTabs() end)
 
     -- Fit the window to the screen. The default size sets the scale on small screens; the saved
     -- size is restored within what fits, and the last position is kept while the game runs.
@@ -453,6 +672,10 @@ local function Build()
             session.left = self:GetLeft() * self:GetEffectiveScale()
             session.top = self:GetTop() * self:GetEffectiveScale()
         end
+        -- The window opens on the whole page, where it was left.
+        KeepScroll(self)
+        self.activeView = nil
+        session.filter = "all"
         self:UnregisterAllEvents()
     end)
     frame:SetScript("OnShow", function(self)
@@ -487,6 +710,12 @@ local function Build()
     end
     return frame
 end
+
+-- Every change moves the changed marks, the sidebar's counts and the filter's.
+NS.OnChange(function()
+    local frame = NS.frame
+    if frame and frame:IsShown() then frame:UpdateMarks() end
+end)
 
 function NS.Toggle()
     if not NS.frame then
@@ -580,7 +809,7 @@ function NS.Debug()
             if row.layoutKind == "control" and not sample then sample = row end
         end
         Describe("warning text", warning)
-        Describe("row caption (draws)", sample and sample.layoutCaption)
-        Describe("row description", sample and sample.layoutDescription)
+        Describe("row caption", sample and sample.layoutCaption)
+        Describe("section title", combat.layout.cards[1] and combat.layout.cards[1].title)
     end
 end
